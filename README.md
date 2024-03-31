@@ -8,15 +8,11 @@ Watchfaces can be obtained from [watch-face-wearfit](https://github.com/fbiego/w
 
 #### Preview
 
-!["Analog"](src/faces/75_2_dial/watchface.png?raw=true "75_2_dial")
-!["Shadow"](src/faces/34_2_dial/watchface.png?raw=true "34_2_dial")
-!["Blue"](src/faces/79_2_dial/watchface.png?raw=true "79_2_dial")
-!["Radar"](src/faces/radar/watchface.png?raw=true "radar")
-!["Outline"](src/faces/116_2_dial/watchface.png?raw=true "116_2_dial")
-!["Red"](src/faces/756_2_dial/watchface.png?raw=true "756_2_dial")
-!["Tix"](src/faces/tix_resized/watchface.png?raw=true "tix_resized")
-!["Pixel"](src/faces/pixel_resized/watchface.png?raw=true "pixel_resized")
-!["Smart"](src/faces/smart_resized/watchface.png?raw=true "smart_resized")
+| | | |
+| -- | -- | -- |
+| !["Analog"](src/faces/75_2_dial/watchface.png?raw=true "75_2_dial") | !["Shadow"](src/faces/34_2_dial/watchface.png?raw=true "34_2_dial") | !["Blue"](src/faces/79_2_dial/watchface.png?raw=true "79_2_dial") |
+| !["Radar"](src/faces/radar/watchface.png?raw=true "radar") | !["Outline"](src/faces/116_2_dial/watchface.png?raw=true "116_2_dial") | !["Red"](src/faces/756_2_dial/watchface.png?raw=true "756_2_dial") |
+| !["Tix"](src/faces/tix_resized/watchface.png?raw=true "tix_resized") | !["Pixel"](src/faces/pixel_resized/watchface.png?raw=true "pixel_resized") | !["Smart"](src/faces/smart_resized/watchface.png?raw=true "smart_resized") |
 
 ## Usage
 
