@@ -2,6 +2,11 @@
 
 This project renders pre-built binary watchfaces on ESP32 using LVGL. A Kotlin script is used to transform the binary watchfaces into LVGL code, which is then compiled for the ESP32 display.
 
+
+## Video
+
+[`Watchfaces demo`](https://youtu.be/lvRsTp9v6_k)
+
 ## Watchfaces
 
 Watchfaces can be obtained from [watch-face-wearfit](https://github.com/fbiego/watch-face-wearfit) or [Chronos Dials](https://chronos.ke/dials). Since this project uses a 240x240 screen, watchfaces of the same resolution are recommended.
