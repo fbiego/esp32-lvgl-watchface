@@ -475,21 +475,33 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
             val lvT = sh?.getLv(cmp) ?: ""
             if (lvT.isNotEmpty() && !(id == 0x0b && aOff == 0)) {
                 when (group(id)) {
-                    1 ->
-                            lvUpdateTime +=
-                                    "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
-                    2 ->
+                    1 -> {
+                        lvUpdateTime +=
+                                "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
+                    }
+                    2 -> {
+                        lvUpdateStatus +=
+                                "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
+                        if (lvT == "(battery / 100) % 10") {
                             lvUpdateStatus +=
-                                    "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
-                    3 ->
-                            lvUpdateActivity +=
-                                    "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
-                    4 ->
-                            lvUpdateHealth +=
-                                    "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
-                    5 ->
-                            lvUpdateWeather +=
-                                    "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
+                                    "\tif (battery < 100)\n\t{\n\t\tlv_obj_add_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n\t} else {\n\t\tlv_obj_clear_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n\t}\n"
+
+                                    // do not draw it on the preview
+                                    continue
+                        }
+                    }
+                    3 -> {
+                        lvUpdateActivity +=
+                                "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
+                    }
+                    4 -> {
+                        lvUpdateHealth +=
+                                "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
+                    }
+                    5 -> {
+                        lvUpdateWeather +=
+                                "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
+                    }
                 }
             }
             if (id == 0x17) {
