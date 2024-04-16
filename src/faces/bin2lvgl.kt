@@ -850,6 +850,7 @@ lv_obj_t *face_{{name}};
 
 void init_face_{{name}}(void){
     face_{{name}} = lv_obj_create(lv_scr_act());
+    lv_obj_set_size(face_{{name}}, 240, 240);
     lv_obj_clear_flag(face_{{name}}, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(face_{{name}}, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(face_{{name}}, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
