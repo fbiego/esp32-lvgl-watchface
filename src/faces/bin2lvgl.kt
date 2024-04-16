@@ -625,7 +625,7 @@ fun getImage(
             val alpha = if (r == 0 && g == 0 && b == 0 && tr) 0 else 255
 
             // Pack the ARGB values into a single int
-            val argb = (alpha shl 24) or (r shl 16) or (g shl 8) or b
+            val argb = (alpha shl 24) or (b shl 16) or (g shl 8) or r
 
             pixels[i] = argb
         }
