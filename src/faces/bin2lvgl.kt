@@ -624,10 +624,10 @@ fun getImage(
             // Set the alpha channel to 0 for black color
             val alpha = if (r == 0 && g == 0 && b == 0 && tr) 0 else 255
 
-            // Pack the ARGB values into a single int
-            val argb = (alpha shl 24) or (b shl 16) or (g shl 8) or r
+            // Pack the ABGR values into a single int
+            val abgr = (alpha shl 24) or (b shl 16) or (g shl 8) or r
 
-            pixels[i] = argb
+            pixels[i] = abgr
         }
     }
 
@@ -673,8 +673,8 @@ fun bufferBytes(canvas: BufferedImage): ByteArray {
         val blue = (pixel shr 3) and 0x1F // Extract blue component (5 bits)
         val alpha = (pixel shr 24) and 0xFF // Extract alpha component (8 bits)
 
-        // Convert to RGB565 format with alpha
-        val rgb565WithAlpha = (alpha shl 16) or (red shl 11) or (green shl 5) or blue
+        // Convert to BGR565 format with alpha
+        val rgb565WithAlpha = (alpha shl 16) or (blue shl 11) or (green shl 5) or red
 
         // Swap the bytes (Little Endian format)
         byteArray += (rgb565WithAlpha and 0xFF).toByte()
@@ -817,6 +817,7 @@ extern "C"
     void update_activity_{{name}}(int steps, int distance, int kcal);
     void update_health_{{name}}(int bpm, int oxygen);
 
+
 #ifdef __cplusplus
 }
 #endif
@@ -835,6 +836,15 @@ var c_file =
 
 lv_obj_t *face_{{name}};
 {{OBJECTS}}
+
+/*
+#if LV_COLOR_DEPTH != 16
+#error "LV_COLOR_DEPTH should be 16bit for watchfaces"
+#endif
+#if LV_COLOR_16_SWAP != 1
+#error "LV_COLOR_16_SWAP should be 1 for watchfaces"
+#endif
+*/
 
 {{RSC_ARR}}
 
@@ -877,6 +887,8 @@ void update_health_{{name}}(int bpm, int oxygen)
 {
 {{HEALTH}}
 }
+
+
 """
 
 var asset_header =
