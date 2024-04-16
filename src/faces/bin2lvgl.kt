@@ -817,7 +817,6 @@ extern "C"
     void update_activity_{{name}}(int steps, int distance, int kcal);
     void update_health_{{name}}(int bpm, int oxygen);
 
-
 #ifdef __cplusplus
 }
 #endif
@@ -837,18 +836,10 @@ var c_file =
 lv_obj_t *face_{{name}};
 {{OBJECTS}}
 
-#if LV_COLOR_DEPTH != 16
-#error "LV_COLOR_DEPTH should be 16bit for watchfaces"
-#endif
-#if LV_COLOR_16_SWAP != 1
-#error "LV_COLOR_16_SWAP should be 1 for watchfaces"
-#endif
-
-
 {{RSC_ARR}}
 
 void init_face_{{name}}(void){
-    face_{{name}} = lv_obj_create(NULL);
+    face_{{name}} = lv_obj_create(lv_scr_act());
     lv_obj_clear_flag(face_{{name}}, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(face_{{name}}, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_bg_opa(face_{{name}}, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -858,7 +849,7 @@ void init_face_{{name}}(void){
     lv_obj_set_style_pad_top(face_{{name}}, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
     lv_obj_set_style_pad_bottom(face_{{name}}, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-    lv_obj_add_event_cb(face_{{name}}, onFaceEvent, LV_EVENT_ALL, NULL);
+    //lv_obj_add_event_cb(face_{{name}}, onFaceEvent, LV_EVENT_ALL, NULL);
 
     {{ITEMS}}
 }
@@ -886,8 +877,6 @@ void update_health_{{name}}(int bpm, int oxygen)
 {
 {{HEALTH}}
 }
-
-
 """
 
 var asset_header =
