@@ -245,7 +245,7 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
     var connIC = "const lv_img_dsc_t *face_${name}_dial_img_connection[] = {\n"
 
     // loop through the components
-    for (x in 0 until no) {
+    myLoop@ for (x in 0 until no) {
 
         val hexId =
                 hex(data[(x * 20) + 4]) +
@@ -487,7 +487,7 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
                                     "\tif (battery < 100)\n\t{\n\t\tlv_obj_add_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n\t} else {\n\t\tlv_obj_clear_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n\t}\n"
 
                                     // do not draw it on the preview
-                                    continue
+                                    continue@myLoop
                         }
                     }
                     3 -> {
@@ -576,13 +576,13 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
     declare += "\tLV_IMG_DECLARE(face_${name}_dial_img_preview_0);\n"
 
     h_file =
-            h_file.replace("{{NAME}}", name.uppercase())
-                    .replace("{{name}}", name.lowercase())
+            h_file.replace("{{NAME}}", name.toUpperCase())
+                    .replace("{{name}}", name.toLowerCase())
                     .replace("{{EXTERN}}", extern)
                     .replace("{{DECLARE}}", declare)
     c_file =
-            c_file.replace("{{NAME}}", name.uppercase())
-                    .replace("{{name}}", name.lowercase())
+            c_file.replace("{{NAME}}", name.toUpperCase())
+                    .replace("{{name}}", name.toLowerCase())
                     .replace("{{OBJECTS}}", objects)
                     .replace("{{ITEMS}}", faceItems)
                     .replace("{{RSC_ARR}}", rscArray)
@@ -695,7 +695,7 @@ fun saveAsset(
 ) {
 
     var text =
-            asset_header.replace("{{NAME}}", name.uppercase()).replace("{{name}}", name.lowercase())
+            asset_header.replace("{{NAME}}", name.toUpperCase()).replace("{{name}}", name.toLowerCase())
 
     for (a in 0 until amount) {
         var dat =
