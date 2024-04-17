@@ -576,8 +576,7 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
     declare += "ZSW_LV_IMG_DECLARE(face_${name}_dial_img_preview_0);\n"
 
     c_file =
-            c_file.replace("{{NAME}}", name.toUpperCase())
-                    .replace("{{name}}", name.toLowerCase())
+            c_file.replace("{{NAME}}", name.toLowerCase())
                     .replace("{{DECLARE}}", declare)
                     .replace("{{OBJECTS}}", objects)
                     .replace("{{ITEMS}}", faceItems)
@@ -585,15 +584,17 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
                     .replace("{{TIME}}", lvUpdateTime)
                     .replace("{{BATTERY}}", lvUpdateBattery)
                     .replace("{{NOTIFICATIONS}}", lvUpdateNotifications)
-                    .replace ("{{ENVIRONMENT}}", lvUpdateEnvironment)
+                    .replace("{{ENVIRONMENT}}", lvUpdateEnvironment)
                     .replace("{{CONNECTION}}", lvUpdateConnection)
                     .replace("{{WEATHER}}", lvUpdateWeather)
                     .replace("{{ACTIVITY}}", lvUpdateActivity)
                     .replace("{{HEALTH}}", lvUpdateHealth)
 
     val source = File(dir, "zsw_watchface_${name}_ui.c")
-    val cmake = File(dir, "CMakeLists.txt")
     source.writeText(c_file)
+
+    val cmake = File(dir, "CMakeLists.txt")
+    cmake_file = cmake_file.replace("{{NAME}}", name.toLowerCase())
     cmake.writeText(cmake_file)
 }
 
@@ -694,7 +695,7 @@ fun saveAsset(
 ) {
 
     var text =
-            asset_header.replace("{{NAME}}", name.toUpperCase()).replace("{{name}}", name.toLowerCase())
+            asset_header.replace("{{NAME}}", name.toLowerCase())
 
     for (a in 0 until amount) {
         var dat =
@@ -800,11 +801,11 @@ var c_file =
 #include "ui/zsw_ui.h"
 #include "applications/watchface/watchface_app.h"
 
-LOG_MODULE_REGISTER(watchface_{{name}}, LOG_LEVEL_WRN);
+LOG_MODULE_REGISTER(watchface_{{NAME}}, LOG_LEVEL_WRN);
 
-static lv_obj_t *face_{{name}};
-static lv_obj_t *root_page_{{name}} = NULL;
-static watchface_app_evt_listener ui_{{name}}_evt_cb;
+static lv_obj_t *face_{{NAME}};
+static lv_obj_t *face_{{NAME}} = NULL;
+static watchface_app_evt_listener ui_{{NAME}}_evt_cb;
 
 {{OBJECTS}}
 {{DECLARE}}
@@ -816,143 +817,148 @@ static watchface_app_evt_listener ui_{{name}}_evt_cb;
 #endif
 
 {{RSC_ARR}}
-void watchface_{{name}}_show(watchface_app_evt_listener evt_cb, zsw_settings_watchface_t *settings) {
-    ui_{{name}}_evt_cb = evt_cb;
-
-    lv_obj_clear_flag(lv_scr_act(), LV_OBJ_FLAG_SCROLLABLE);
-    watchface_ui_invalidate_cached();
-    root_page_{{name}} = lv_obj_create(lv_scr_act());
-
-    lv_obj_set_size(root_page_{{name}}, 240, 240);
-    lv_obj_clear_flag(root_page_{{name}}, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(root_page_{{name}}, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(root_page_{{name}}, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(root_page_{{name}}, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(root_page_{{name}}, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(root_page_{{name}}, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(root_page_{{name}}, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(root_page_{{name}}, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-    {{ITEMS}}
-}
-
-static int watchface_{{name}}_init(void)
+static void watchface_{{NAME}}_remove(void)
 {
-    watchface_app_register_ui(&ui_api);
-
-    return 0;
-}
-
-static void watchface_{{name}}_remove(void)
-{
-    if (!root_page_{{name}}) {
+    if (!face_{{NAME}}) {
         return;
     }
-    lv_obj_del(root_page_{{name}});
-    root_page_{{name}} = NULL;
+    lv_obj_del(face_{{NAME}});
+    face_{{NAME}} = NULL;
 }
 
-static void watchface_{{name}}_invalidate_cached(void)
+static void watchface_{{NAME}}_invalidate_cached(void)
 {
 }
 
-static void watchface_{{name}}_set_datetime(int day_of_week, int date, int day, int month, int year, int weekday, int32_t hour,
+static void watchface_{{NAME}}_set_datetime(int day_of_week, int date, int day, int month, int year, int weekday, int32_t hour,
                                    int32_t minute, int32_t second, uint32_t usec)
 {
-    if (!root_page_{{name}}) {
+    if (!face_{{NAME}}) {
         return;
     }
 
 {{TIME}}
 }
 
-static void watchface_{{name}}_set_step(int32_t steps, int32_t distance, int32_t kcal)
+static void watchface_{{NAME}}_set_step(int32_t steps, int32_t distance, int32_t kcal)
 {
-    if (!root_page_{{name}}) {
+    if (!face_{{NAME}}) {
         return;
     }
 
 {{ACTIVITY}}
 }
 
-static void watchface_{{name}}_set_hrm(int32_t bpm, int32_t oxygen)
+static void watchface_{{NAME}}_set_hrm(int32_t bpm, int32_t oxygen)
 {
-    if (!root_page_{{name}}) {
+    if (!face_{{NAME}}) {
         return;
     }
 
 {{HEALTH}}
 }
 
-static void watchface_{{name}}_set_weather(int8_t temperature, int weather_code)
+static void watchface_{{NAME}}_set_weather(int8_t temperature, int weather_code)
 {
-    if (!root_page_{{name}}) {
+    if (!face_{{NAME}}) {
         return;
     }
 
 {{WEATHER}}
 }
 
-static void watchface_{{name}}_set_ble_connected(bool connected)
+static void watchface_{{NAME}}_set_ble_connected(bool connected)
 {
-    if (!root_page_{{name}}) {
+    if (!face_{{NAME}}) {
         return;
     }
 
 {{CONNECTION}}
 }
 
-static void watchface_{{name}}_set_battery_percent(int32_t percent, int32_t battery)
+static void watchface_{{NAME}}_set_battery_percent(int32_t percent, int32_t battery)
 {
-    if (!root_page_{{name}}) {
+    if (!face_{{NAME}}) {
         return;
     }
 
 {{BATTERY}}
 }
 
-static void watchface_{{name}}_set_num_notifcations(int32_t number)
+static void watchface_{{NAME}}_set_num_notifcations(int32_t number)
 {
-    if (!root_page_{{name}}) {
+    if (!face_{{NAME}}) {
         return;
     }
 
 {{NOTIFICATIONS}}
 }
 
-static void watchface_{{name}}_set_watch_env_sensors(int temperature, int humidity, int pressure, float iaq, float co2)
+static void watchface_{{NAME}}_set_watch_env_sensors(int temperature, int humidity, int pressure, float iaq, float co2)
 {
-    if (!root_page_{{name}}) {
+    if (!face_{{NAME}}) {
         return;
     }
 
 {{ENVIRONMENT}}
 }
 
+void watchface_{{NAME}}_show(watchface_app_evt_listener evt_cb, zsw_settings_watchface_t *settings) {
+    ui_{{NAME}}_evt_cb = evt_cb;
+
+    lv_obj_clear_flag(lv_scr_act(), LV_OBJ_FLAG_SCROLLABLE);
+    face_{{NAME}} = lv_obj_create(lv_scr_act());
+    watchface_{{NAME}}_invalidate_cached();
+
+    lv_obj_clear_flag(face_{{NAME}}, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scrollbar_mode(face_{{NAME}}, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_set_style_bg_opa(face_{{NAME}}, LV_OPA_TRANSP, LV_PART_MAIN);
+
+    lv_obj_set_style_border_width(face_{{NAME}}, 0, LV_PART_MAIN);
+    lv_obj_set_size(face_{{NAME}}, 240, 240);
+    lv_obj_clear_flag(face_{{NAME}}, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(face_{{NAME}}, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(face_{{NAME}}, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(face_{{NAME}}, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(face_{{NAME}}, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(face_{{NAME}}, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(face_{{NAME}}, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(face_{{NAME}}, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+    {{ITEMS}}
+}
+
 static watchface_ui_api_t ui_api = {
-    .show = watchface_{{name}}_show,
-    .remove = watchface_{{name}}_remove,
-    .set_battery_percent = watchface_{{name}}_set_battery_percent,
-    .set_hrm = watchface_{{name}}_set_hrm,
-    .set_step = watchface_{{name}}_set_step,
-    .set_ble_connected = watchface_{{name}}_set_ble_connected,
-    .set_num_notifcations = watchface_{{name}}_set_num_notifcations,
-    .set_weather = watchface_{{name}}_set_weather,
-    .set_datetime = watchface_{{name}}_set_datetime,
-    .set_watch_env_sensors = watchface_{{name}}_set_watch_env_sensors,
-    .ui_invalidate_cached = watchface_{{name}}_invalidate_cached,
+    .show = watchface_{{NAME}}_show,
+    .remove = watchface_{{NAME}}_remove,
+    .set_battery_percent = watchface_{{NAME}}_set_battery_percent,
+    .set_hrm = watchface_{{NAME}}_set_hrm,
+    .set_step = watchface_{{NAME}}_set_step,
+    .set_ble_connected = watchface_{{NAME}}_set_ble_connected,
+    .set_num_notifcations = watchface_{{NAME}}_set_num_notifcations,
+    .set_weather = watchface_{{NAME}}_set_weather,
+    .set_datetime = watchface_{{NAME}}_set_datetime,
+    .set_watch_env_sensors = watchface_{{NAME}}_set_watch_env_sensors,
+    .ui_invalidate_cached = watchface_{{NAME}}_invalidate_cached,
 };
 
-SYS_INIT(watchface_{{name}}_init, APPLICATION, WATCHFACE_UI_INIT_PRIO);
+static int watchface_{{NAME}}_init(void)
+{
+    watchface_app_register_ui(&ui_api);
+
+    return 0;
+}
+
+SYS_INIT(watchface_{{NAME}}_init, APPLICATION, WATCHFACE_UI_INIT_PRIO);
 """
 
 var asset_header =
         """
 // File generated by bin2lvgl
-// developed by fbiego.
-// https://github.com/fbiego
+// developed by Daniel Kampert. 
+// https://github.com/kampi
 // Watchface: {{NAME}}
 
-#include "{{name}}.h"
+#include <lvgl.h>
 
 #ifndef LV_ATTRIBUTE_MEM_ALIGN
 #define LV_ATTRIBUTE_MEM_ALIGN
@@ -962,6 +968,13 @@ var asset_header =
 val s = "\${app_sources}"
 var cmake_file =
     """
+# File generated by bin2lvgl
+# developed by fbiego.
+# https://github.com/fbiego
+# modified by Daniel Kampert. 
+# https://github.com/kampi
+# Watchface: {{NAME}}
+
 FILE(GLOB app_sources *.c)
 target_sources(app PRIVATE ${s})
 """
