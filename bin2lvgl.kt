@@ -237,6 +237,8 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
     var lvUpdateTime = ""
     var lvUpdateWeather = ""
     var lvUpdateBattery = ""
+    var lvUpdateNotifications = ""
+    var lvUpdateEnvironment = ""
     var lvUpdateConnection = ""
     var lvUpdateActivity = ""
     var lvUpdateHealth = ""
@@ -582,6 +584,8 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
                     .replace("{{RSC_ARR}}", rscArray)
                     .replace("{{TIME}}", lvUpdateTime)
                     .replace("{{BATTERY}}", lvUpdateBattery)
+                    .replace("{{NOTIFICATIONS}}", lvUpdateNotifications)
+                    .replace ("{{ENVIRONMENT}}", lvUpdateEnvironment)
                     .replace("{{CONNECTION}}", lvUpdateConnection)
                     .replace("{{WEATHER}}", lvUpdateWeather)
                     .replace("{{ACTIVITY}}", lvUpdateActivity)
@@ -897,13 +901,31 @@ static void watchface_{{name}}_set_ble_connected(bool connected)
 {{CONNECTION}}
 }
 
-static void watchface_{{name}}_set_battery_percent(int32_t percent, int32_t value)
+static void watchface_{{name}}_set_battery_percent(int32_t percent, int32_t battery)
 {
     if (!root_page_{{name}}) {
         return;
     }
 
 {{BATTERY}}
+}
+
+static void watchface_{{name}}_set_num_notifcations(int32_t number)
+{
+    if (!root_page_{{name}}) {
+        return;
+    }
+
+{{NOTIFICATIONS}}
+}
+
+static void watchface_{{name}}_set_watch_env_sensors(int temperature, int humidity, int pressure, float iaq, float co2)
+{
+    if (!root_page_{{name}}) {
+        return;
+    }
+
+{{ENVIRONMENT}}
 }
 
 static watchface_ui_api_t ui_api = {
