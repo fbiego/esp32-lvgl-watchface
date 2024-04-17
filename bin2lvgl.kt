@@ -55,7 +55,6 @@ fun hex(i: Int): String {
 }
 
 class Item(
-        // var id: Int,
         var known: Boolean,
         var name: String
 )
@@ -231,14 +230,14 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
 
     var tp = 0
 
-    var extern = ""
     var objects = ""
     var declare = ""
     var faceItems = ""
     var rscArray = ""
     var lvUpdateTime = ""
     var lvUpdateWeather = ""
-    var lvUpdateStatus = ""
+    var lvUpdateBattery = ""
+    var lvUpdateConnection = ""
     var lvUpdateActivity = ""
     var lvUpdateHealth = ""
 
@@ -350,7 +349,7 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
 
                 // save assets & declare
                 for (aa in 0 until cmp) {
-                    declare += "\tLV_IMG_DECLARE(face_${name}_dial_img_${x}_${clt}_${aa});\n"
+                    declare += "ZSW_LV_IMG_DECLARE(face_${name}_dial_img_${x}_${clt}_${aa});\n"
                     rscArr += "\t&face_${name}_dial_img_${x}_${clt}_${aa},\n"
                 }
                 rscArr += "};\n"
@@ -431,9 +430,7 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
             }
 
             if (drawable) {
-                // extern lv_obj_t *face_{{name}};
-                extern += "\textern lv_obj_t *face_${name}_${x}_${clt};\n"
-                objects += "lv_obj_t *face_${name}_${x}_${clt};\n"
+                objects += "static lv_obj_t *face_${name}_${x}_${clt};\n"
 
                 faceItems +=
                         lvItem.replace("{{PARENT}}", "face_${name}")
@@ -481,10 +478,10 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
                                 "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
                     }
                     2 -> {
-                        lvUpdateStatus +=
+                        lvUpdateBattery +=
                                 "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
                         if (lvT == "(battery / 100) % 10") {
-                            lvUpdateStatus +=
+                            lvUpdateBattery +=
                                     "\tif (battery < 100)\n\t{\n\t\tlv_obj_add_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n\t} else {\n\t\tlv_obj_clear_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n\t}\n"
 
                                     // do not draw it on the preview
@@ -510,11 +507,11 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
                         "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_weather[icon % 8]);\n"
             }
             if (id == 0x0b && aOff == 0) {
-                lvUpdateStatus +=
+                lvUpdateBattery +=
                         "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[(battery / (100 / ${cmp})) % ${cmp}]);\n"
             }
             if (id == 0x0a) {
-                lvUpdateStatus +=
+                lvUpdateConnection +=
                         "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_connection[(connection ? 0 : 1) % 2]);\n"
             }
             if (id == 0x08) {
@@ -574,29 +571,24 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
 
     saveAsset(bufferBytes(scaledCanvas), 160, 160, false, 1, name, "preview")
 
-    declare += "\tLV_IMG_DECLARE(face_${name}_dial_img_preview_0);\n"
+    declare += "ZSW_LV_IMG_DECLARE(face_${name}_dial_img_preview_0);\n"
 
-    h_file =
-            h_file.replace("{{NAME}}", name.toUpperCase())
-                    .replace("{{name}}", name.toLowerCase())
-                    .replace("{{EXTERN}}", extern)
-                    .replace("{{DECLARE}}", declare)
     c_file =
             c_file.replace("{{NAME}}", name.toUpperCase())
                     .replace("{{name}}", name.toLowerCase())
+                    .replace("{{DECLARE}}", declare)
                     .replace("{{OBJECTS}}", objects)
                     .replace("{{ITEMS}}", faceItems)
                     .replace("{{RSC_ARR}}", rscArray)
                     .replace("{{TIME}}", lvUpdateTime)
-                    .replace("{{STATUS}}", lvUpdateStatus)
+                    .replace("{{BATTERY}}", lvUpdateBattery)
+                    .replace("{{CONNECTION}}", lvUpdateConnection)
                     .replace("{{WEATHER}}", lvUpdateWeather)
                     .replace("{{ACTIVITY}}", lvUpdateActivity)
                     .replace("{{HEALTH}}", lvUpdateHealth)
 
-    val header = File(dir, "$name.h")
-    val source = File(dir, "$name.c")
+    val source = File(dir, "zsw_watchface_${name}_ui.c")
     val cmake = File(dir, "CMakeLists.txt")
-    header.writeText(h_file)
     source.writeText(c_file)
     cmake.writeText(cmake_file)
 }
@@ -788,45 +780,30 @@ var lvItem =
     lv_obj_clear_flag({{CHILD}}, LV_OBJ_FLAG_SCROLLABLE);
 """
 
-var h_file =
-        """
-// File generated by bin2lvgl
-// developed by fbiego. 
-// https://github.com/fbiego
-// Watchface: {{NAME}}
-
-#ifndef _FACE_{{NAME}}_H
-#define _FACE_{{NAME}}_H
-
-#include "lvgl.h"
-
-extern lv_obj_t *face_{{name}};
-{{EXTERN}}
-
-{{DECLARE}}
-//void onFaceEvent(lv_event_t * e);
-
-void init_face_{{name}}(void);
-void update_time_{{name}}(int second, int minute, int hour, bool mode, bool am, int day, int month, int year, int weekday);
-void update_weather_{{name}}(int temp, int icon);
-void update_status_{{name}}(int battery, bool connection);
-void update_activity_{{name}}(int steps, int distance, int kcal);
-void update_health_{{name}}(int bpm, int oxygen);
-
-#endif
-"""
-
 var c_file =
         """
 // File generated by bin2lvgl
-// developed by fbiego. 
+// developed by fbiego.
 // https://github.com/fbiego
+// modified by Daniel Kampert. 
+// https://github.com/kampi
 // Watchface: {{NAME}}
 
-#include "{{name}}.h"
+#include <lvgl.h>
 
-lv_obj_t *face_{{name}};
+#include <zephyr/logging/log.h>
+
+#include "ui/zsw_ui.h"
+#include "applications/watchface/watchface_app.h"
+
+LOG_MODULE_REGISTER(watchface_{{name}}, LOG_LEVEL_WRN);
+
+static lv_obj_t *face_{{name}};
+static lv_obj_t *root_page_{{name}} = NULL;
+static watchface_app_evt_listener ui_{{name}}_evt_cb;
+
 {{OBJECTS}}
+{{DECLARE}}
 #if CONFIG_LV_COLOR_DEPTH_16 != 1
 #error "CONFIG_LV_COLOR_DEPTH_16 should be 16 bit for watchfaces"
 #endif
@@ -835,46 +812,115 @@ lv_obj_t *face_{{name}};
 #endif
 
 {{RSC_ARR}}
-void init_face_{{name}}(void){
-    face_{{name}} = lv_obj_create(lv_scr_act());
-    lv_obj_set_size(face_{{name}}, 240, 240);
-    lv_obj_clear_flag(face_{{name}}, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(face_{{name}}, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(face_{{name}}, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_border_width(face_{{name}}, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_left(face_{{name}}, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_right(face_{{name}}, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_top(face_{{name}}, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-    lv_obj_set_style_pad_bottom(face_{{name}}, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+void watchface_{{name}}_show(watchface_app_evt_listener evt_cb, zsw_settings_watchface_t *settings) {
+    ui_{{name}}_evt_cb = evt_cb;
 
-    //lv_obj_add_event_cb(face_{{name}}, onFaceEvent, LV_EVENT_ALL, NULL);
+    lv_obj_clear_flag(lv_scr_act(), LV_OBJ_FLAG_SCROLLABLE);
+    watchface_ui_invalidate_cached();
+    root_page_{{name}} = lv_obj_create(lv_scr_act());
+
+    lv_obj_set_size(root_page_{{name}}, 240, 240);
+    lv_obj_clear_flag(root_page_{{name}}, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(root_page_{{name}}, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_opa(root_page_{{name}}, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_border_width(root_page_{{name}}, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_left(root_page_{{name}}, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_right(root_page_{{name}}, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_top(root_page_{{name}}, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_bottom(root_page_{{name}}, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
     {{ITEMS}}
 }
 
-void update_time_{{name}}(int second, int minute, int hour, bool mode, bool am, int day, int month, int year, int weekday)
+static int watchface_{{name}}_init(void)
 {
+    watchface_app_register_ui(&ui_api);
+
+    return 0;
+}
+
+static void watchface_{{name}}_remove(void)
+{
+    if (!root_page_{{name}}) {
+        return;
+    }
+    lv_obj_del(root_page_{{name}});
+    root_page_{{name}} = NULL;
+}
+
+static void watchface_{{name}}_invalidate_cached(void)
+{
+}
+
+static void watchface_{{name}}_set_datetime(int day_of_week, int date, int day, int month, int year, int weekday, int32_t hour,
+                                   int32_t minute, int32_t second, uint32_t usec)
+{
+    if (!root_page_{{name}}) {
+        return;
+    }
+
 {{TIME}}
 }
 
-void update_weather_{{name}}(int temp, int icon)
+static void watchface_{{name}}_set_step(int32_t steps, int32_t distance, int32_t kcal)
 {
-{{WEATHER}}
-}
+    if (!root_page_{{name}}) {
+        return;
+    }
 
-void update_status_{{name}}(int battery, bool connection){
-{{STATUS}}
-}
-
-void update_activity_{{name}}(int steps, int distance, int kcal)
-{
 {{ACTIVITY}}
 }
 
-void update_health_{{name}}(int bpm, int oxygen)
+static void watchface_{{name}}_set_hrm(int32_t bpm, int32_t oxygen)
 {
+    if (!root_page_{{name}}) {
+        return;
+    }
+
 {{HEALTH}}
 }
 
+static void watchface_{{name}}_set_weather(int8_t temperature, int weather_code)
+{
+    if (!root_page_{{name}}) {
+        return;
+    }
+
+{{WEATHER}}
+}
+
+static void watchface_{{name}}_set_ble_connected(bool connected)
+{
+    if (!root_page_{{name}}) {
+        return;
+    }
+
+{{CONNECTION}}
+}
+
+static void watchface_{{name}}_set_battery_percent(int32_t percent, int32_t value)
+{
+    if (!root_page_{{name}}) {
+        return;
+    }
+
+{{BATTERY}}
+}
+
+static watchface_ui_api_t ui_api = {
+    .show = watchface_{{name}}_show,
+    .remove = watchface_{{name}}_remove,
+    .set_battery_percent = watchface_{{name}}_set_battery_percent,
+    .set_hrm = watchface_{{name}}_set_hrm,
+    .set_step = watchface_{{name}}_set_step,
+    .set_ble_connected = watchface_{{name}}_set_ble_connected,
+    .set_num_notifcations = watchface_{{name}}_set_num_notifcations,
+    .set_weather = watchface_{{name}}_set_weather,
+    .set_datetime = watchface_{{name}}_set_datetime,
+    .set_watch_env_sensors = watchface_{{name}}_set_watch_env_sensors,
+    .ui_invalidate_cached = watchface_{{name}}_invalidate_cached,
+};
+
+SYS_INIT(watchface_{{name}}_init, APPLICATION, WATCHFACE_UI_INIT_PRIO);
 """
 
 var asset_header =
@@ -894,8 +940,6 @@ var asset_header =
 val s = "\${app_sources}"
 var cmake_file =
     """
-if(CONFIG_WATCHFACE_NEW)
-    FILE(GLOB app_sources *.c)
-    target_sources(app PRIVATE ${s})
-endif()
+FILE(GLOB app_sources *.c)
+target_sources(app PRIVATE ${s})
 """
