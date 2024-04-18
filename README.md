@@ -26,6 +26,8 @@ Forked from [esp32-lvgl-watchface](https://github.com/fbiego/esp32-lvgl-watchfac
 
 Watchfaces can be obtained from [watch-face-wearfit](https://github.com/fbiego/watch-face-wearfit) or [Chronos Dials](https://chronos.ke/dials). Since the ZSWatch uses a 240x240 screen, watchfaces of the same resolution are recommended.
 
+!["LVGL watchface"](esp32_lvgl_watchface.png "watchface") 
+
 #### Preview
 
 | | | |
@@ -38,36 +40,19 @@ Watchfaces can be obtained from [watch-face-wearfit](https://github.com/fbiego/w
 ## Preparation (Linux)
 
 - Install Kotlin by using `sudo apt-get install kotlin`
+- Run `export ZSWATCH_ROOT=<ZSWatch-Root>` and replace `ZSWatch-Root` with the root directory of your [ZSWatch](https://github.com/jakkra/ZSWatch) project
 
 ## Usage
 
-Compile the script [`bin2lvgl.kt`](bin2lvgl.kt) into `bin2lvgl.jar` by using the following command:
+- Run `generate.sh` and pass in the URL of the target watchface (i. e. `https://github.com/fbiego/watch-face-wearfit/raw/main/dials/HW21/107_2_dial.bin`)
 
 ```sh
-kotlinc bin2lvgl.kt -include-runtime -d bin2lvgl.jar
+generate.sh https://github.com/fbiego/watch-face-wearfit/raw/main/dials/HW21/107_2_dial.bin
 ```
 
-Download a watchface via `wget`:
+- If the script is executed without an error you can compile the ZSWatch firmware
+- Enjoy the new watchface
 
-```sh
-wget https://github.com/fbiego/watch-face-wearfit/raw/main/dials/X5Pro/1005.bin -O watchface.bin
-```
-
-To convert the watchface, simply run the following command:
-
-```sh
-java -jar bin2lvgl.jar watchface.bin
-```
-
-The LVGL code will be generated into a `output` folder and this folder must be copied into the `watchfaces` directory of the ZSWatch project:
-
-```sh
-cp <output>/* <ZSWatchPath>/ZSWatch/app/src/ui/watchfaces/<output>/
-```
-
-**TBD How to add it to the firmware**
-
-!["LVGL watchface"](esp32_lvgl_watchface.png "watchface") 
 
 ## Maintainer
 
