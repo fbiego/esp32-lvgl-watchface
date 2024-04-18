@@ -346,12 +346,12 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
             if (rs == null && drawable) {
                 rsc.add(Resource(clt, x))
 
-                var rscArr = "const lv_img_dsc_t *face_${name}_dial_img_${x}_${clt}_group[] = {\n"
+                var rscArr = "const void *face_${name}_dial_img_${x}_${clt}_group[] = {\n"
 
                 // save assets & declare
                 for (aa in 0 until cmp) {
                     declare += "ZSW_LV_IMG_DECLARE(face_${name}_dial_img_${x}_${clt}_${aa});\n"
-                    rscArr += "    &face_${name}_dial_img_${x}_${clt}_${aa},\n"
+                    rscArr += "    ZSW_LV_IMG_USE(face_${name}_dial_img_${x}_${clt}_${aa}),\n"
                 }
                 rscArr += "};\n"
 
@@ -776,7 +776,7 @@ const lv_img_dsc_t face_${name}_dial_img_${asset}_${a} = {
 var lvItem =
         """
     {{CHILD}} = lv_img_create({{PARENT}});
-    lv_img_set_src({{CHILD}}, &{{RESOURCE}});
+    lv_img_set_src({{CHILD}}, ZSW_LV_IMG_USE({{RESOURCE}}));
     lv_obj_set_width({{CHILD}}, LV_SIZE_CONTENT);
     lv_obj_set_height({{CHILD}}, LV_SIZE_CONTENT);
     lv_obj_set_x({{CHILD}}, {{CHILD_X}});
