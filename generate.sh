@@ -8,7 +8,6 @@ if [ $# -ne 1 ]; then
 fi
 
 URL=$1
-ZSWATCH_ROOT=/home/daniel/ZSWatch
 FILENAME=${URL##*/}
 FILENAME_WITHOUT_ENDING=${FILENAME%%.*}
 
