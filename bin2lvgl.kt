@@ -761,7 +761,8 @@ const lv_img_dsc_t face_${name}_dial_img_${asset}_${a} = {
         text += obj
     }
 
-    val dir = File(name)
+    val path = "assets_watchfaces/" + name
+    val dir = File(path)
 
     if (!dir.exists()) {
         dir.mkdirs()
