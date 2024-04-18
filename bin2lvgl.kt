@@ -223,8 +223,7 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
     var lan = 0
 
     var text = "Components List\n"
-    var a = 0 // item
-    // var b = 0 //
+    var a = 0
 
     var wt = 0
 
@@ -352,14 +351,14 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
                 // save assets & declare
                 for (aa in 0 until cmp) {
                     declare += "ZSW_LV_IMG_DECLARE(face_${name}_dial_img_${x}_${clt}_${aa});\n"
-                    rscArr += "\t&face_${name}_dial_img_${x}_${clt}_${aa},\n"
+                    rscArr += "    &face_${name}_dial_img_${x}_${clt}_${aa},\n"
                 }
                 rscArr += "};\n"
 
                 if (id == 0x17) {
-                    weatherIc += "\t&face_${name}_dial_img_${x}_${clt}_0,\n"
+                    weatherIc += "    &face_${name}_dial_img_${x}_${clt}_0,\n"
                 } else if (id == 0x0A) {
-                    connIC += "\t&face_${name}_dial_img_${x}_${clt}_0,\n"
+                    connIC += "    &face_${name}_dial_img_${x}_${clt}_0,\n"
 
                     if (connIC.count { it == '\n' } > 2) {
 
@@ -443,27 +442,27 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
 
                 if (id == 0x0d) {
                     faceItems +=
-                            "\tlv_img_set_pivot(face_${name}_${x}_${clt}, $aOff, ${ySz - aOff});\n"
+                            "    lv_img_set_pivot(face_${name}_${x}_${clt}, $aOff, ${ySz - aOff});\n"
                     if (lan == 1) {
                         // hour hand
                         lvUpdateTime +=
-                                "\tlv_img_set_angle(face_${name}_${x}_${clt}, hour * 300 + (minute * 5));\n"
+                                "    lv_img_set_angle(face_${name}_${x}_${clt}, hour * 300 + (minute * 5));\n"
                     }
                     if (lan == 17) {
                         // minute hand
                         lvUpdateTime +=
-                                "\tlv_img_set_angle(face_${name}_${x}_${clt}, minute * 60);\n"
+                                "    lv_img_set_angle(face_${name}_${x}_${clt}, minute * 60);\n"
                     }
                     if (lan == 33) {
                         // second hand
                         lvUpdateTime +=
-                                "\tlv_img_set_angle(face_${name}_${x}_${clt}, second * 60);\n"
+                                "    lv_img_set_angle(face_${name}_${x}_${clt}, second * 60);\n"
                     }
                 }
             }
             if (id == 0x16 && id2 == 0x00) {
                 lvUpdateWeather +=
-                        "\tif (temp >= 0)\n\t{\n\t\tlv_obj_add_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n\t} else {\n\t\tlv_obj_clear_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n\t}\n"
+                        "    if (temp >= 0)\n    {\n        lv_obj_add_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n    } else {\n        lv_obj_clear_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n    }\n"
                 continue
             }
             if (id == 0x16 && id2 == 0x01) {
@@ -477,14 +476,14 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
                 when (group(id)) {
                     1 -> {
                         lvUpdateTime +=
-                                "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
+                                "    lv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
                     }
                     2 -> {
                         lvUpdateBattery +=
-                                "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
+                                "    lv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
                         if (lvT == "(battery / 100) % 10") {
                             lvUpdateBattery +=
-                                    "\tif (battery < 100)\n\t{\n\t\tlv_obj_add_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n\t} else {\n\t\tlv_obj_clear_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n\t}\n"
+                                    "    if (battery < 100)\n    {\n        lv_obj_add_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n    } else {\n        lv_obj_clear_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n    }\n"
 
                                     // do not draw it on the preview
                                     continue@myLoop
@@ -492,35 +491,35 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
                     }
                     3 -> {
                         lvUpdateActivity +=
-                                "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
+                                "    lv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
                     }
                     4 -> {
                         lvUpdateHealth +=
-                                "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
+                                "    lv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
                     }
                     5 -> {
                         lvUpdateWeather +=
-                                "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
+                                "    lv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
                     }
                 }
             }
             if (id == 0x17) {
                 lvUpdateWeather +=
-                        "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_weather[icon % 8]);\n"
+                        "    lv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_weather[icon % 8]);\n"
             }
             if (id == 0x0b && aOff == 0) {
                 lvUpdateBattery +=
-                        "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[(battery / (100 / ${cmp})) % ${cmp}]);\n"
+                        "    lv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[(battery / (100 / ${cmp})) % ${cmp}]);\n"
             }
             if (id == 0x0a) {
                 lvUpdateConnection +=
-                        "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_connection[(connection ? 0 : 1) % 2]);\n"
+                        "    lv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_connection[(connection ? 0 : 1) % 2]);\n"
             }
             if (id == 0x08) {
                 lvUpdateTime +=
-                        "\tif (mode)\n\t{\n\t\tlv_obj_add_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n\t} else {\n\t\tlv_obj_clear_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n\t}\n"
+                        "    if (mode)\n    {\n        lv_obj_add_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n    } else {\n        lv_obj_clear_flag(face_${name}_${x}_${clt}, LV_OBJ_FLAG_HIDDEN);\n    }\n"
                 lvUpdateTime +=
-                        "\tlv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[(am ? 0 : 1) % 2]);\n"
+                        "    lv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[(am ? 0 : 1) % 2]);\n"
             }
 
             if (id == 0x0d && (lan == 17 || lan == 33)) {
