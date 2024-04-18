@@ -274,9 +274,12 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
 
         val id2 = data[(x * 20) + 5].toPInt()
 
-        val isG =
+        var isG =
                 (data[(x * 20) + 5].toPInt() and 0x80) ==
                         0x80 // check if is grouped in single resource
+        if (id == 0x08){
+            isG = true
+        }
         val cmp = if (isG) data[(x * 20) + 5].toPInt() and 0x7F else 1
         // println("Group $cmp")
 
