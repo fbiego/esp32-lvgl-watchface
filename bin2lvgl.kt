@@ -831,7 +831,7 @@ static void watchface_{{NAME}}_invalidate_cached(void)
 }
 
 static void watchface_{{NAME}}_set_datetime(int day_of_week, int date, int day, int month, int year, int weekday, int32_t hour,
-                                   int32_t minute, int32_t second, uint32_t usec)
+                                   int32_t minute, int32_t second, uint32_t usec, bool am, bool mode)
 {
     if (!face_{{NAME}}) {
         return;
