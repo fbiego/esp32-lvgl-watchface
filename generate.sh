@@ -7,6 +7,11 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
+if [ x"${ZSWATCH_ROOT}" == "x" ]; then 
+    echo "ZSWATCH_ROOT not set! Please set the environment variable before running this script."
+    exit
+fi
+
 URL=$1
 FILENAME=${URL##*/}
 FILENAME_WITHOUT_ENDING=${FILENAME%%.*}
