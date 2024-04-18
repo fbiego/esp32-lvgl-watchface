@@ -30,10 +30,10 @@ Watchfaces can be obtained from [watch-face-wearfit](https://github.com/fbiego/w
 
 | | | |
 | -- | -- | -- |
-| !["Analog"](src/faces/75_2_dial/watchface.png?raw=true "75_2_dial") | !["Shadow"](src/faces/34_2_dial/watchface.png?raw=true "34_2_dial") | !["Blue"](src/faces/79_2_dial/watchface.png?raw=true "79_2_dial") |
-| !["Radar"](src/faces/radar/watchface.png?raw=true "radar") | !["Outline"](src/faces/116_2_dial/watchface.png?raw=true "116_2_dial") | !["Red"](src/faces/756_2_dial/watchface.png?raw=true "756_2_dial") |
-| !["Tix"](src/faces/tix_resized/watchface.png?raw=true "tix_resized") | !["Pixel"](src/faces/pixel_resized/watchface.png?raw=true "pixel_resized") | !["Smart"](src/faces/smart_resized/watchface.png?raw=true "smart_resized") |
-| !["Kenya"](src/faces/kenya/watchface.png?raw=true "kenya") | !["B & W"](src/faces/b_w_resized/watchface.png?raw=true "b_w_resized") | !["WFB"](src/faces/wfb_resized/watchface.png?raw=true "wfb_resized") |
+| !["Analog"](previews/75_2_dial/watchface.png "75_2_dial") | !["Shadow"](previews/34_2_dial/watchface.png "34_2_dial") | !["Blue"](previews/79_2_dial/watchface.png "79_2_dial") |
+| !["Radar"](previews/radar/watchface.png "radar") | !["Outline"](previews/116_2_dial/watchface.png "116_2_dial") | !["Red"](previews/756_2_dial/watchface.png "756_2_dial") |
+| !["Tix"](previews/tix_resized/watchface.png "tix_resized") | !["Pixel"](previews/pixel_resized/watchface.png "pixel_resized") | !["Smart"](previews/smart_resized/watchface.png "smart_resized") |
+| !["Kenya"](previews/kenya/watchface.png "kenya") | !["B & W"](previews/b_w_resized/watchface.png "b_w_resized") | !["WFB"](previews/wfb_resized/watchface.png "wfb_resized") |
 
 ## Preparation (Linux)
 
@@ -67,7 +67,7 @@ cp <output>/* <ZSWatchPath>/ZSWatch/app/src/ui/watchfaces/<output>/
 
 **TBD How to add it to the firmware**
 
-!["LVGL watchface"](esp32_lvgl_watchface.png?raw=true "watchface") 
+!["LVGL watchface"](esp32_lvgl_watchface.png "watchface") 
 
 ## Maintainer
 
