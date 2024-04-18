@@ -26,6 +26,10 @@ mkdir -p ${ZSWATCH_ROOT}/app/src/images/assets_watchfaces
 kotlinc bin2lvgl.kt -include-runtime -d bin2lvgl.jar && java -jar bin2lvgl.jar ${FILENAME} && mkdir -p ${ZSWATCH_ROOT}/app/src/ui/watchfaces/${FILENAME_WITHOUT_ENDING} && cp ${FILENAME_WITHOUT_ENDING}/* ${ZSWATCH_ROOT}/app/src/ui/watchfaces/${FILENAME_WITHOUT_ENDING}/
 mv ${FILENAME} download/${FILENAME}
 
+# Copy the preview image
+mkdir -p previews/${FILENAME_WITHOUT_ENDING}
+cp ${FILENAME_WITHOUT_ENDING}/watchface.png previews/${FILENAME_WITHOUT_ENDING}/watchface.png
+
 # Copy all assets into the ZSWatch project
 cd assets_watchfaces
 mv */* .
