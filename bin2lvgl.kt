@@ -219,16 +219,11 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
     graphics.fillRect(0, 0, wd, ht)
 
     val rsc = arrayListOf<Resource>()
-
     var lan = 0
-
     var text = "Components List\n"
     var a = 0
-
     var wt = 0
-
     var tp = 0
-
     var objects = ""
     var declare = ""
     var faceItems = ""
@@ -241,7 +236,6 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
     var lvUpdateConnection = ""
     var lvUpdateActivity = ""
     var lvUpdateHealth = ""
-
     var weatherIc = "const lv_img_dsc_t *face_${name}_dial_img_weather[] = {\n"
     var connIC = "const lv_img_dsc_t *face_${name}_dial_img_connection[] = {\n"
 
