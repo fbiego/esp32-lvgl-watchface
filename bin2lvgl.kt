@@ -31,6 +31,10 @@
 
 */
 
+/* TODO
+- Environment (Pressure, Humidity, IAQ) is not supported
+*/
+
 import java.awt.AlphaComposite
 import java.awt.Color
 import java.awt.Graphics2D
@@ -55,8 +59,8 @@ fun hex(i: Int): String {
 }
 
 class Item(
-    var known: Boolean,
-    var name: String
+        var known: Boolean,
+        var name: String
 )
 
 class Resource(var id: Int, var pos: Int)
@@ -114,7 +118,12 @@ class Show(var id: Int, var value: Int) {
             0x03 -> "month"
             0x06 -> "weekday"
             0x07 -> "year"
+            0x0B -> "battery"
             0x1B -> "seconds"
+            0x16 -> "temp"
+            0x17 -> "icon"
+            0x10 -> "bpm"
+            0x11 -> "oxygen"
             0x0E -> "steps"
             0x0F -> "kcal"
             0x14 -> "distance"
@@ -195,6 +204,7 @@ private fun generateList() {
 }
 
 fun main(args: Array<String>) {
+
     if (args.size > 0) {
         val data = File(args[0]).readBytes()
 
@@ -336,6 +346,7 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
 
         if (xSz > 0 && ySz > 0) {
             var rs = rsc.singleOrNull { it.id == clt }
+
             var z =
                     if (rs != null) {
                         rs.pos
@@ -479,17 +490,11 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
             val sh = itemShow.singleOrNull { it.id == id }
             val offs = sh?.getOff(cmp) ?: Random().nextInt(cmp)
             val lvT = sh?.getLv(cmp) ?: ""
-            val unit = sh?.unit() ?: ""
-            if (lvT.isNotEmpty() && (unit.isNotEmpty()) && !(id == 0x0b && aOff == 0)) {
+            if (lvT.isNotEmpty() && !(id == 0x0b && aOff == 0)) {
                 when (group(id)) {
                     1 -> {
-                            lvUpdateTime +=
-"""
-    if (last_${unit} != ${unit}) {
-        last_${unit} = ${unit};
-        lv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);
-    }
-"""
+                        lvUpdateTime +=
+                                "    lv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
                     }
                     2 -> {
                         lvUpdateBattery +=
@@ -504,12 +509,7 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
                     }
                     3 -> {
                         lvUpdateActivity +=
-"""
-    if (last_${unit} != ${unit}) {
-        last_${unit} = ${unit};
-        lv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);
-    }
-"""
+                                "    lv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);\n"
                     }
                     4 -> {
                         lvUpdateHealth +=
@@ -772,7 +772,7 @@ const lv_img_dsc_t face_${name}_dial_img_${asset}_${a} = {
     .data_size = sizeof(face_${name}_dial_img_${asset}_data_${a}),
     .header.cf = $color,
     .data = face_${name}_dial_img_${asset}_data_${a}};
-    """
+"""
 
         text += obj
 
@@ -823,16 +823,13 @@ static lv_obj_t *face_{{NAME}};
 static lv_obj_t *face_{{NAME}} = NULL;
 static watchface_app_evt_listener ui_{{NAME}}_evt_cb;
 
-static int last_hour = -1;
-static int last_minute = -1;
+static int last_date = -1;
 static int last_day = -1;
 static int last_month = -1;
 static int last_year = -1;
 static int last_weekday = -1;
-
-static int32_t last_steps = -1;
-static int32_t last_distance = -1;
-static int32_t last_kcal = -1;
+static int last_hour = -1;
+static int last_minute = -1;
 
 {{OBJECTS}}
 {{DECLARE}}
@@ -856,16 +853,13 @@ static void watchface_{{NAME}}_remove(void)
 
 static void watchface_{{NAME}}_invalidate_cached(void)
 {
-    last_hour = -1;
-    last_minute = -1;
+    last_date = -1;
     last_day = -1;
     last_month = -1;
     last_year = -1;
     last_weekday = -1;
-
-    last_steps = -1;
-    last_distance = -1;
-    last_kcal = -1;
+    last_hour = -1;
+    last_minute = -1;
 }
 
 static void watchface_{{NAME}}_set_datetime(int day_of_week, int date, int day, int month, int year, int weekday, int hour,
@@ -874,6 +868,7 @@ static void watchface_{{NAME}}_set_datetime(int day_of_week, int date, int day, 
     if (!face_{{NAME}}) {
         return;
     }
+
 {{TIME}}
 }
 
@@ -882,6 +877,7 @@ static void watchface_{{NAME}}_set_step(int32_t steps, int32_t distance, int32_t
     if (!face_{{NAME}}) {
         return;
     }
+
 {{ACTIVITY}}
 }
 
@@ -890,6 +886,7 @@ static void watchface_{{NAME}}_set_hrm(int32_t bpm, int32_t oxygen)
     if (!face_{{NAME}}) {
         return;
     }
+
 {{HEALTH}}
 }
 
@@ -898,6 +895,7 @@ static void watchface_{{NAME}}_set_weather(int8_t temperature, int icon)
     if (!face_{{NAME}}) {
         return;
     }
+
 {{WEATHER}}
 }
 
@@ -906,6 +904,7 @@ static void watchface_{{NAME}}_set_ble_connected(bool connected)
     if (!face_{{NAME}}) {
         return;
     }
+
 {{CONNECTION}}
 }
 
@@ -914,6 +913,7 @@ static void watchface_{{NAME}}_set_battery_percent(int32_t percent, int32_t batt
     if (!face_{{NAME}}) {
         return;
     }
+
 {{BATTERY}}
 }
 
@@ -922,6 +922,7 @@ static void watchface_{{NAME}}_set_num_notifcations(int32_t number)
     if (!face_{{NAME}}) {
         return;
     }
+
 {{NOTIFICATIONS}}
 }
 
@@ -930,6 +931,7 @@ static void watchface_{{NAME}}_set_watch_env_sensors(int temperature, int humidi
     if (!face_{{NAME}}) {
         return;
     }
+
 {{ENVIRONMENT}}
 }
 
