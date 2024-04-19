@@ -41,6 +41,7 @@ Watchfaces can be obtained from [watch-face-wearfit](https://github.com/fbiego/w
 
 ## Preparation (Linux)
 
+- Install the Java JDK by running `sudo apt-get install openjdk-11-jdk` 
 - Install Kotlin by using `sudo apt-get install kotlin`
 - Run `export ZSWATCH_ROOT=<ZSWatch-Root>` and replace `ZSWatch-Root` with the root directory of your [ZSWatch](https://github.com/jakkra/ZSWatch) project
 
