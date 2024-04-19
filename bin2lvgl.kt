@@ -62,7 +62,7 @@ class Item(
 class Resource(var id: Int, var pos: Int)
 
 class Show(var id: Int, var value: Int) {
-    private var offset = 0
+    var offset = 0
     fun getOff(max: Int): Int {
         var dig = getPlaceValue(value, offset)
         if (dig >= max) {
@@ -480,13 +480,14 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
             val offs = sh?.getOff(cmp) ?: Random().nextInt(cmp)
             val lvT = sh?.getLv(cmp) ?: ""
             val unit = sh?.unit() ?: ""
+            val place = sh?.offset?:1
             if (lvT.isNotEmpty() && (unit.isNotEmpty()) && !(id == 0x0b && aOff == 0)) {
                 when (group(id)) {
                     1 -> {
                             lvUpdateTime +=
 """
-    if (last_${unit} != ${unit}) {
-        last_${unit} = ${unit};
+    if (getPlaceValue(last_${unit}, $place) != getPlaceValue(${unit}, $place)) {
+        last_${unit} = setPlaceValue(last_${unit}, $place, getPlaceValue(${unit}, $place));
         lv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);
     }
 """
@@ -505,8 +506,8 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
                     3 -> {
                         lvUpdateActivity +=
 """
-    if (last_${unit} != ${unit}) {
-        last_${unit} = ${unit};
+    if (getPlaceValue(last_${unit}, $place) != getPlaceValue(${unit}, $place)) {
+        last_${unit} = setPlaceValue(last_${unit}, $place, getPlaceValue(${unit}, $place));
         lv_img_set_src(face_${name}_${x}_${clt}, face_${name}_dial_img_${z}_${clt}_group[${lvT}]);
     }
 """
@@ -844,6 +845,20 @@ static int32_t last_kcal = -1;
 #endif
 
 {{RSC_ARR}}
+int32_t getPlaceValue(int32_t num, int32_t place) {
+    int32_t divisor = 1;
+    for (uint32_t i = 1; i < place; i++)
+        divisor *= 10;
+    return (num / divisor) % 10;
+}
+
+int32_t setPlaceValue(int32_t num, int32_t place, int32_t newValue) {
+    int32_t divisor = 1;
+    for (uint32_t i = 1; i < place; i++)
+        divisor *= 10;
+    return num - ((num / divisor) % 10 * divisor) + (newValue * divisor);
+}
+
 static void watchface_{{NAME}}_remove(void)
 {
     if (!face_{{NAME}}) {
