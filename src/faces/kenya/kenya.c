@@ -6,6 +6,8 @@
 
 #include "kenya.h"
 
+#ifdef ENABLE_FACE_KENYA
+
 lv_obj_t *face_kenya;
 lv_obj_t *face_kenya_0_264;
 lv_obj_t *face_kenya_1_58372;
@@ -72,7 +74,10 @@ const lv_img_dsc_t *face_kenya_dial_img_12_85153_group[] = {
 };
 
 
-void init_face_kenya(void){
+#endif
+
+void init_face_kenya(void (*callback)(const char*, const lv_img_dsc_t *, lv_obj_t **)){
+#ifdef ENABLE_FACE_KENYA
     face_kenya = lv_obj_create(NULL);
     lv_obj_clear_flag(face_kenya, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(face_kenya, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -185,10 +190,19 @@ void init_face_kenya(void){
     lv_obj_add_flag(face_kenya_12_85153, LV_OBJ_FLAG_ADV_HITTEST );
     lv_obj_clear_flag(face_kenya_12_85153, LV_OBJ_FLAG_SCROLLABLE );
 
+
+    callback("Kenya", &face_kenya_dial_img_preview_0, &face_kenya);
+
+#endif
 }
 
 void update_time_kenya(int second, int minute, int hour, bool mode, bool am, int day, int month, int year, int weekday)
 {
+#ifdef ENABLE_FACE_KENYA
+    if (!face_kenya)
+    {
+        return;
+    }
 	lv_img_set_src(face_kenya_2_58391, face_kenya_dial_img_2_58391_group[(month / 1) % 10]);
 	lv_img_set_src(face_kenya_3_58391, face_kenya_dial_img_2_58391_group[(month / 10) % 10]);
 	lv_img_set_src(face_kenya_4_58391, face_kenya_dial_img_2_58391_group[(day / 1) % 10]);
@@ -199,25 +213,78 @@ void update_time_kenya(int second, int minute, int hour, bool mode, bool am, int
 	lv_img_set_src(face_kenya_10_60782, face_kenya_dial_img_7_60782_group[(minute / 10) % 10]);
 	lv_img_set_src(face_kenya_12_85153, face_kenya_dial_img_12_85153_group[((weekday + 6) / 1) % 7]);
 
+#endif
 }
 
 void update_weather_kenya(int temp, int icon)
 {
+#ifdef ENABLE_FACE_KENYA
+    if (!face_kenya)
+    {
+        return;
+    }
 
+#endif
 }
 
 void update_status_kenya(int battery, bool connection){
+#ifdef ENABLE_FACE_KENYA
+    if (!face_kenya)
+    {
+        return;
+    }
 
+#endif
 }
 
 void update_activity_kenya(int steps, int distance, int kcal)
 {
+#ifdef ENABLE_FACE_KENYA
+    if (!face_kenya)
+    {
+        return;
+    }
 
+#endif
 }
 
 void update_health_kenya(int bpm, int oxygen)
 {
+#ifdef ENABLE_FACE_KENYA
+    if (!face_kenya)
+    {
+        return;
+    }
 
+#endif
+}
+
+void update_all_kenya(int second, int minute, int hour, bool mode, bool am, int day, int month, int year, int weekday, 
+    int temp, int icon, int battery, bool connection, int steps, int distance, int kcal, int bpm, int oxygen)
+{
+#ifdef ENABLE_FACE_KENYA
+    update_time_kenya(second, minute, hour, mode, am, day, month, year, weekday);
+    update_weather_kenya(temp, icon);
+    update_status_kenya(battery, connection);
+    update_activity_kenya(steps, distance, kcal);
+    update_health_kenya(bpm, oxygen);
+#endif
+}
+
+void update_check_kenya(lv_obj_t *root, int second, int minute, int hour, bool mode, bool am, int day, int month, int year, int weekday, 
+    int temp, int icon, int battery, bool connection, int steps, int distance, int kcal, int bpm, int oxygen)
+{
+#ifdef ENABLE_FACE_KENYA
+    if (root != face_kenya)
+    {
+        return;
+    }
+    update_time_kenya(second, minute, hour, mode, am, day, month, year, weekday);
+    update_weather_kenya(temp, icon);
+    update_status_kenya(battery, connection);
+    update_activity_kenya(steps, distance, kcal);
+    update_health_kenya(bpm, oxygen);
+#endif
 }
 
 

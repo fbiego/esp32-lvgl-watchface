@@ -185,7 +185,13 @@ fun main(args: Array<String>) {
 
         if (data.size > 0) {
             val nm = args[0].replace(".bin", "").replace("-", "_")
-            extractComponents(data, nm)
+
+            val faceName = if (data.size > 1 ) {
+                args[1]
+            } else {
+                nm.replace("_", " ")
+            }
+            extractComponents(data, nm, faceName)
 
             println("-----Done-------")
         } else {
@@ -196,7 +202,7 @@ fun main(args: Array<String>) {
     }
 }
 
-fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 240) {
+fun extractComponents(data: ByteArray, name: String, faceName: String, wd: Int = 240, ht: Int = 240) {
     val no =
             (data[3].toPInt() * 256 * 256 * 256) +
                     (data[2].toPInt() * 256 * 256) +
@@ -584,6 +590,7 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
                     .replace("{{name}}", name.lowercase())
                     .replace("{{EXTERN}}", extern)
                     .replace("{{DECLARE}}", declare)
+                    .replace("{{FACE_NAME}}", faceName)
     c_file =
             c_file.replace("{{NAME}}", name.uppercase())
                     .replace("{{name}}", name.lowercase())
@@ -595,6 +602,7 @@ fun extractComponents(data: ByteArray, name: String, wd: Int = 240, ht: Int = 24
                     .replace("{{WEATHER}}", lvUpdateWeather)
                     .replace("{{ACTIVITY}}", lvUpdateActivity)
                     .replace("{{HEALTH}}", lvUpdateHealth)
+                    .replace("{{FACE_NAME}}", faceName)
 
     val header = File(dir, "$name.h")
     val source = File(dir, "$name.c")
@@ -773,8 +781,13 @@ const lv_img_dsc_t face_${name}_dial_img_${asset}_${a} = {
         dir.mkdirs()
         println("Created output folder")
     }
+    val dirA = File(dir, "assets")
+    if (!dirA.exists()) {
+        dirA.mkdirs()
+        println("Created assets folder")
+    }
 
-    val fl = File(dir, "face_${name}_dial_img_${asset}.c")
+    val fl = File(dirA, "face_${name}_dial_img_${asset}.c")
     fl.writeText(text)
 }
 
@@ -807,19 +820,27 @@ extern "C"
 
 #include "lvgl.h"
 
+//#define ENABLE_FACE_{{NAME}} // ({{FACE_NAME}}) uncomment to enable or define it elsewhere
+
+#ifdef ENABLE_FACE_{{NAME}}
     extern lv_obj_t *face_{{name}};
 {{EXTERN}}
 
 {{DECLARE}}
 
+#endif
     void onFaceEvent(lv_event_t * e);
 
-    void init_face_{{name}}(void);
+    void init_face_{{name}}(void (*callback)(const char*, const lv_img_dsc_t *, lv_obj_t **));
     void update_time_{{name}}(int second, int minute, int hour, bool mode, bool am, int day, int month, int year, int weekday);
     void update_weather_{{name}}(int temp, int icon);
     void update_status_{{name}}(int battery, bool connection);
     void update_activity_{{name}}(int steps, int distance, int kcal);
     void update_health_{{name}}(int bpm, int oxygen);
+    void update_all_{{name}}(int second, int minute, int hour, bool mode, bool am, int day, int month, int year, int weekday, 
+                int temp, int icon, int battery, bool connection, int steps, int distance, int kcal, int bpm, int oxygen);
+    void update_check_{{name}}(lv_obj_t *root, int second, int minute, int hour, bool mode, bool am, int day, int month, int year, int weekday, 
+                int temp, int icon, int battery, bool connection, int steps, int distance, int kcal, int bpm, int oxygen);
 
 
 #ifdef __cplusplus
@@ -838,6 +859,8 @@ var c_file =
 
 #include "{{name}}.h"
 
+#ifdef ENABLE_FACE_{{NAME}}
+
 lv_obj_t *face_{{name}};
 {{OBJECTS}}
 
@@ -851,7 +874,10 @@ lv_obj_t *face_{{name}};
 
 {{RSC_ARR}}
 
-void init_face_{{name}}(void){
+#endif
+
+void init_face_{{name}}(void (*callback)(const char*, const lv_img_dsc_t *, lv_obj_t **)){
+#ifdef ENABLE_FACE_{{NAME}}
     face_{{name}} = lv_obj_create(NULL);
     lv_obj_clear_flag(face_{{name}}, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(face_{{name}}, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
@@ -865,30 +891,92 @@ void init_face_{{name}}(void){
     lv_obj_add_event_cb(face_{{name}}, onFaceEvent, LV_EVENT_ALL, NULL);
 
     {{ITEMS}}
+
+    callback("{{FACE_NAME}}", &face_{{name}}_dial_img_preview_0, &face_{{name}});
+
+#endif
 }
 
 void update_time_{{name}}(int second, int minute, int hour, bool mode, bool am, int day, int month, int year, int weekday)
 {
+#ifdef ENABLE_FACE_{{NAME}}
+    if (!face_{{name}})
+    {
+        return;
+    }
 {{TIME}}
+#endif
 }
 
 void update_weather_{{name}}(int temp, int icon)
 {
+#ifdef ENABLE_FACE_{{NAME}}
+    if (!face_{{name}})
+    {
+        return;
+    }
 {{WEATHER}}
+#endif
 }
 
 void update_status_{{name}}(int battery, bool connection){
+#ifdef ENABLE_FACE_{{NAME}}
+    if (!face_{{name}})
+    {
+        return;
+    }
 {{STATUS}}
+#endif
 }
 
 void update_activity_{{name}}(int steps, int distance, int kcal)
 {
+#ifdef ENABLE_FACE_{{NAME}}
+    if (!face_{{name}})
+    {
+        return;
+    }
 {{ACTIVITY}}
+#endif
 }
 
 void update_health_{{name}}(int bpm, int oxygen)
 {
+#ifdef ENABLE_FACE_{{NAME}}
+    if (!face_{{name}})
+    {
+        return;
+    }
 {{HEALTH}}
+#endif
+}
+
+void update_all_{{name}}(int second, int minute, int hour, bool mode, bool am, int day, int month, int year, int weekday, 
+    int temp, int icon, int battery, bool connection, int steps, int distance, int kcal, int bpm, int oxygen)
+{
+#ifdef ENABLE_FACE_{{NAME}}
+    update_time_{{name}}(second, minute, hour, mode, am, day, month, year, weekday);
+    update_weather_{{name}}(temp, icon);
+    update_status_{{name}}(battery, connection);
+    update_activity_{{name}}(steps, distance, kcal);
+    update_health_{{name}}(bpm, oxygen);
+#endif
+}
+
+void update_check_{{name}}(lv_obj_t *root, int second, int minute, int hour, bool mode, bool am, int day, int month, int year, int weekday, 
+    int temp, int icon, int battery, bool connection, int steps, int distance, int kcal, int bpm, int oxygen)
+{
+#ifdef ENABLE_FACE_{{NAME}}
+    if (root != face_{{name}})
+    {
+        return;
+    }
+    update_time_{{name}}(second, minute, hour, mode, am, day, month, year, weekday);
+    update_weather_{{name}}(temp, icon);
+    update_status_{{name}}(battery, connection);
+    update_activity_{{name}}(steps, distance, kcal);
+    update_health_{{name}}(bpm, oxygen);
+#endif
 }
 
 
@@ -901,7 +989,7 @@ var asset_header =
 // https://github.com/fbiego
 // Watchface: {{NAME}}
 
-#include "{{name}}.h"
+#include "../{{name}}.h"
 
 #ifndef LV_ATTRIBUTE_MEM_ALIGN
 #define LV_ATTRIBUTE_MEM_ALIGN

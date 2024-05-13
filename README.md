@@ -31,21 +31,28 @@ The Kotlin script [`bin2lvgl.kt`](src/faces/bin2lvgl.kt) has been compiled into 
 
 You can also recompile it with `kotlinc bin2lvgl.kt -include-runtime -d bin2lvgl.jar`.
 
-To convert the watchface, simply run `java -jar bin2lvgl.jar watchface.bin`, and LVGL code will be generated into a folder.
+To convert the watchface, simply run `java -jar bin2lvgl.jar watchface.bin Name`, and LVGL code will be generated into a folder.
 On Windows, just drag and drop the bin file to [`convert.bat`](src/faces/convert.bat)
 
 In the `main.cpp`, include the `watchface.h` file.
+By default the watchface is not enabled. You need to uncomment the ENABLE_FACE definition
 
-You will need to implement a callback for the watchface events:
+You will need to implement a callback for registering the watchface  and events:
 
 ```
 void onFaceEvent(lv_event_t *e){
 
 }
+void registerWatchface_cb(const char *name, const lv_img_dsc_t *preview, lv_obj_t **watchface)
+{
+  // name -> name of the watchface, this is the second parameter passed when converting the watchface to LVGL code
+  // preview -> the preview image of the watchface
+  // watchface -> pointer to the root object of the watchface
+}
 ```
 After initializing LVGL, initialize the watchface:
 ```
-init_face_watchface();
+init_face_watchface(registerWatchface_cb); // need to pass the callback function
 lv_disp_load_scr(face_watchface); // load the watchface root object to display it
 ```
 
@@ -56,9 +63,13 @@ update_weather_watchface(temp, ic);
 update_status_watchface(bat, con);
 update_activity_watchface(2735, 357, 345);
 update_health_watchface(76, 97);
+update_all_watchface(/*..all params */);
+update_check_watchface(home, /*..all params */); // this check if the home object and the root object of the watchface are similar
+// this is useful if your have multiple watchfaces, only the active one will be updated
 ```
 
 This project implements using multiple watchfaces using a `face_selector` object. Note that the number of watchfaces you can compile is limited by the target ESP32 flash size.
+You will also need a `ui_home` object for multiple watchfaces. Set the active watchface to this object
 
 This project only demonstrates watchfaces that are functional to display time by leveraging the [`ChronosESP32 library`](https://github.com/fbiego/chronos-esp32).
 

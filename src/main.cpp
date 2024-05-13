@@ -38,20 +38,25 @@
 #include <ChronosESP32.h>
 #include <Timber.h>
 
+
+
 #include "faces/34_2_dial/34_2_dial.h"
 #include "faces/75_2_dial/75_2_dial.h"
 #include "faces/79_2_dial/79_2_dial.h"
-#include "faces/radar/radar.h"
 #include "faces/116_2_dial/116_2_dial.h"
 #include "faces/756_2_dial/756_2_dial.h"
-
-#include "faces/tix_resized/tix_resized.h"
+#include "faces/b_w_resized/b_w_resized.h"
+#include "faces/kenya/kenya.h"
 #include "faces/pixel_resized/pixel_resized.h"
+#include "faces/radar/radar.h"
 #include "faces/smart_resized/smart_resized.h"
+#include "faces/tix_resized/tix_resized.h"
+#include "faces/wfb_resized/wfb_resized.h"
 
 #include "main.h"
 
 #define buf_size 10
+#define MAX_FACES 15
 
 class LGFX : public lgfx::LGFX_Device
 {
@@ -148,27 +153,18 @@ static lv_disp_draw_buf_t draw_buf;
 static lv_color_t buf[2][screenWidth * buf_size];
 
 lv_obj_t *ui_faceSelect;
+lv_obj_t *ui_home;
 
+int numFaces = 0;
 
-struct Face{
-  const char *name; // watchface name
+struct Face
+{
+  const char *name;            // watchface name
   const lv_img_dsc_t *preview; // watchface preview image
-  lv_obj_t **watchface; // watchface root object pointer
+  lv_obj_t **watchface;        // watchface root object pointer
 };
 
-Face face[] = {
-  {.name = "Analog", .preview = &face_75_2_dial_dial_img_preview_0, .watchface = &face_75_2_dial},
-  {.name = "Shadow", .preview = &face_34_2_dial_dial_img_preview_0, .watchface = &face_34_2_dial},
-  {.name = "Blue", .preview = &face_79_2_dial_dial_img_preview_0, .watchface = &face_79_2_dial},
-  {.name = "Radar", .preview = &face_radar_dial_img_preview_0, .watchface = &face_radar},
-  {.name = "Outline", .preview = &face_116_2_dial_dial_img_preview_0, .watchface = &face_116_2_dial},
-  {.name = "Red", .preview = &face_756_2_dial_dial_img_preview_0, .watchface = &face_756_2_dial},
-  {.name = "Tix", .preview = &face_tix_resized_dial_img_preview_0, .watchface = &face_tix_resized},
-  {.name = "Pixel", .preview = &face_pixel_resized_dial_img_preview_0, .watchface = &face_pixel_resized},
-  {.name = "Smart", .preview = &face_smart_resized_dial_img_preview_0, .watchface = &face_smart_resized},
-};
-
-size_t faceSize = sizeof(face) / sizeof(face[0]);
+Face faces[MAX_FACES];
 
 void update_faces();
 
@@ -208,19 +204,25 @@ void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
   }
 }
 
-void onFaceSelected(lv_event_t *e){
+void onFaceSelected(lv_event_t *e)
+{
   lv_event_code_t event_code = lv_event_get_code(e);
   lv_obj_t *target = lv_event_get_target(e);
   int index = (int)lv_event_get_user_data(e);
 
   if (event_code == LV_EVENT_CLICKED)
   {
-    
-    lv_scr_load_anim(*face[index].watchface, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, false);
+    if (index >= numFaces)
+    {
+      return;
+    }
+    ui_home = *faces[index].watchface;
+    lv_scr_load_anim(ui_home, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, false);
   }
 }
 
-void onFaceEvent(lv_event_t *e){
+void onFaceEvent(lv_event_t *e)
+{
   lv_event_code_t event_code = lv_event_get_code(e);
   lv_obj_t *target = lv_event_get_target(e);
 
@@ -228,73 +230,85 @@ void onFaceEvent(lv_event_t *e){
   {
     lv_scr_load_anim(ui_faceSelect, LV_SCR_LOAD_ANIM_FADE_ON, 500, 0, false);
   }
-  
 }
 
-void addWatchface(const char* name, const lv_img_dsc_t *src, int index){
+void addWatchface(const char *name, const lv_img_dsc_t *src, int index)
+{
 
   lv_obj_t *ui_faceItem = lv_obj_create(ui_faceSelect);
-  lv_obj_set_width( ui_faceItem, 160);
-  lv_obj_set_height( ui_faceItem, 180);
-  lv_obj_set_align( ui_faceItem, LV_ALIGN_CENTER );
-  lv_obj_clear_flag( ui_faceItem, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-  lv_obj_set_style_radius(ui_faceItem, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_color(ui_faceItem, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
-  lv_obj_set_style_bg_opa(ui_faceItem, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_border_width(ui_faceItem, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_outline_color(ui_faceItem, lv_color_hex(0x142ABC), LV_PART_MAIN | LV_STATE_DEFAULT );
-  lv_obj_set_style_outline_opa(ui_faceItem, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_outline_width(ui_faceItem, 2, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_outline_pad(ui_faceItem, 1, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_pad_left(ui_faceItem, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_pad_right(ui_faceItem, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_pad_top(ui_faceItem, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_pad_bottom(ui_faceItem, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+  lv_obj_set_width(ui_faceItem, 160);
+  lv_obj_set_height(ui_faceItem, 180);
+  lv_obj_set_align(ui_faceItem, LV_ALIGN_CENTER);
+  lv_obj_clear_flag(ui_faceItem, LV_OBJ_FLAG_SCROLLABLE); /// Flags
+  lv_obj_set_style_radius(ui_faceItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_color(ui_faceItem, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_opa(ui_faceItem, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_border_width(ui_faceItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_outline_color(ui_faceItem, lv_color_hex(0x142ABC), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_outline_opa(ui_faceItem, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_outline_width(ui_faceItem, 2, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_outline_pad(ui_faceItem, 1, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_pad_left(ui_faceItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_pad_right(ui_faceItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_pad_top(ui_faceItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_pad_bottom(ui_faceItem, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
 
   lv_obj_t *ui_facePreview = lv_img_create(ui_faceItem);
   lv_img_set_src(ui_facePreview, src);
-  lv_obj_set_width( ui_facePreview, LV_SIZE_CONTENT);  /// 1
-  lv_obj_set_height( ui_facePreview, LV_SIZE_CONTENT);   /// 1
-  lv_obj_set_align( ui_facePreview, LV_ALIGN_TOP_MID );
-  lv_obj_add_flag( ui_facePreview, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
-  lv_obj_clear_flag( ui_facePreview, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+  lv_obj_set_width(ui_facePreview, LV_SIZE_CONTENT);  /// 1
+  lv_obj_set_height(ui_facePreview, LV_SIZE_CONTENT); /// 1
+  lv_obj_set_align(ui_facePreview, LV_ALIGN_TOP_MID);
+  lv_obj_add_flag(ui_facePreview, LV_OBJ_FLAG_ADV_HITTEST);  /// Flags
+  lv_obj_clear_flag(ui_facePreview, LV_OBJ_FLAG_SCROLLABLE); /// Flags
 
   lv_obj_t *ui_faceLabel = lv_label_create(ui_faceItem);
-  lv_obj_set_width( ui_faceLabel, 160);
-  lv_obj_set_height( ui_faceLabel, LV_SIZE_CONTENT);   /// 1
-  lv_obj_set_align( ui_faceLabel, LV_ALIGN_BOTTOM_MID );
-  lv_label_set_long_mode(ui_faceLabel,LV_LABEL_LONG_DOT);
+  lv_obj_set_width(ui_faceLabel, 160);
+  lv_obj_set_height(ui_faceLabel, LV_SIZE_CONTENT); /// 1
+  lv_obj_set_align(ui_faceLabel, LV_ALIGN_BOTTOM_MID);
+  lv_label_set_long_mode(ui_faceLabel, LV_LABEL_LONG_DOT);
   lv_label_set_text(ui_faceLabel, name);
-  lv_obj_set_style_text_align(ui_faceLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_text_font(ui_faceLabel, &lv_font_montserrat_16, LV_PART_MAIN| LV_STATE_DEFAULT);
+  lv_obj_set_style_text_align(ui_faceLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_text_font(ui_faceLabel, &lv_font_montserrat_16, LV_PART_MAIN | LV_STATE_DEFAULT);
 
   lv_obj_add_event_cb(ui_faceItem, onFaceSelected, LV_EVENT_ALL, (void *)index);
+}
+
+void init_face_select()
+{
+  ui_faceSelect = lv_obj_create(NULL);
+  lv_obj_set_width(ui_faceSelect, 240);
+  lv_obj_set_height(ui_faceSelect, 240);
+  lv_obj_set_align(ui_faceSelect, LV_ALIGN_CENTER);
+  lv_obj_set_flex_flow(ui_faceSelect, LV_FLEX_FLOW_ROW);
+  lv_obj_set_flex_align(ui_faceSelect, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+  lv_obj_clear_flag(ui_faceSelect, LV_OBJ_FLAG_SNAPPABLE); /// Flags
+  lv_obj_set_scrollbar_mode(ui_faceSelect, LV_SCROLLBAR_MODE_OFF);
+  lv_obj_set_style_radius(ui_faceSelect, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_color(ui_faceSelect, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_bg_opa(ui_faceSelect, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_border_width(ui_faceSelect, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_pad_left(ui_faceSelect, 30, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_pad_right(ui_faceSelect, 30, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_pad_top(ui_faceSelect, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_pad_bottom(ui_faceSelect, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_pad_row(ui_faceSelect, 10, LV_PART_MAIN | LV_STATE_DEFAULT);
+  lv_obj_set_style_pad_column(ui_faceSelect, 15, LV_PART_MAIN | LV_STATE_DEFAULT);
 
 }
 
-void init_face_select(){
-  ui_faceSelect = lv_obj_create(NULL);
-  lv_obj_set_width( ui_faceSelect, 240);
-  lv_obj_set_height( ui_faceSelect, 240);
-  lv_obj_set_align( ui_faceSelect, LV_ALIGN_CENTER );
-  lv_obj_set_flex_flow(ui_faceSelect,LV_FLEX_FLOW_ROW);
-  lv_obj_set_flex_align(ui_faceSelect, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-  lv_obj_clear_flag( ui_faceSelect, LV_OBJ_FLAG_SNAPPABLE );    /// Flags
-  lv_obj_set_scrollbar_mode(ui_faceSelect, LV_SCROLLBAR_MODE_OFF);
-  lv_obj_set_style_radius(ui_faceSelect, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_bg_color(ui_faceSelect, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
-  lv_obj_set_style_bg_opa(ui_faceSelect, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_border_width(ui_faceSelect, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_pad_left(ui_faceSelect, 30, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_pad_right(ui_faceSelect, 30, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_pad_top(ui_faceSelect, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_pad_bottom(ui_faceSelect, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_pad_row(ui_faceSelect, 10, LV_PART_MAIN| LV_STATE_DEFAULT);
-  lv_obj_set_style_pad_column(ui_faceSelect, 15, LV_PART_MAIN| LV_STATE_DEFAULT);
-
-  for (int x = 0; x < faceSize; x++){
-    addWatchface(face[x].name, face[x].preview, x);
+void registerWatchface_cb(const char *name, const lv_img_dsc_t *preview, lv_obj_t **watchface)
+{
+  if (numFaces >= MAX_FACES)
+  {
+    return;
   }
+  faces[numFaces].name = name;
+  faces[numFaces].preview = preview;
+  faces[numFaces].watchface = watchface;
+  addWatchface(faces[numFaces].name, faces[numFaces].preview, numFaces);
+
+  Timber.i("Watchface: %s registered at %d", name, numFaces);
+  numFaces++;
 }
 
 void logCallback(Level level, unsigned long time, String message)
@@ -302,14 +316,13 @@ void logCallback(Level level, unsigned long time, String message)
   Serial.print(message);
 }
 
-
-void setup() {
+void setup()
+{
   Serial.begin(115200); /* prepare for possible serial debug */
 
   Timber.setLogCallback(logCallback);
 
   Timber.i("Starting up device");
-
 
   tft.init();
   tft.initDMA();
@@ -341,31 +354,40 @@ void setup() {
   lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), true, LV_FONT_DEFAULT);
   lv_disp_set_theme(dispp, theme);
 
-
-  init_face_34_2_dial();
-  init_face_75_2_dial();
-  init_face_79_2_dial();
-  init_face_radar();
-  init_face_116_2_dial();
-  init_face_756_2_dial();
-
-  init_face_smart_resized();
-  init_face_tix_resized();
-  init_face_pixel_resized();
+  ui_home = lv_obj_create(NULL);
 
   init_face_select();
 
-  lv_disp_load_scr(face_75_2_dial);
+  init_face_34_2_dial(registerWatchface_cb);
+  init_face_75_2_dial(registerWatchface_cb);
+  init_face_79_2_dial(registerWatchface_cb);
+  init_face_116_2_dial(registerWatchface_cb);
+  init_face_756_2_dial(registerWatchface_cb);
+  init_face_b_w_resized(registerWatchface_cb);
+  init_face_kenya(registerWatchface_cb);
+  init_face_pixel_resized(registerWatchface_cb);
+  init_face_radar(registerWatchface_cb);
+  init_face_smart_resized(registerWatchface_cb);
+  init_face_tix_resized(registerWatchface_cb);
+  init_face_wfb_resized(registerWatchface_cb);
 
   
-  // lv_obj_t *preview = lv_img_create(lv_scr_act());
-  // lv_img_set_src(preview, &face_79_2_dial_dial_img_preview_0);
-  // lv_obj_set_width(preview, LV_SIZE_CONTENT);
-  // lv_obj_set_height(preview, LV_SIZE_CONTENT);
-  // lv_obj_set_x(preview, 40);
-  // lv_obj_set_y(preview, 40);
-  // lv_obj_add_flag(preview, LV_OBJ_FLAG_ADV_HITTEST );
-  // lv_obj_clear_flag(preview, LV_OBJ_FLAG_SCROLLABLE );
+
+  if (numFaces == 0){
+    lv_obj_t *label1 = lv_label_create(ui_home);
+    lv_obj_align(label1, LV_ALIGN_TOP_MID, 0, 100);
+    lv_label_set_long_mode(label1, LV_LABEL_LONG_WRAP);
+    lv_obj_set_width(label1, screenWidth - 30);
+    lv_label_set_text(label1, "No watchfaces detected. Check that they are enabled");
+
+    lv_obj_t *slider1 = lv_slider_create(ui_home);
+    lv_obj_set_width(slider1, screenWidth - 40);
+    lv_obj_align_to(slider1, label1, LV_ALIGN_OUT_BOTTOM_MID, 0, 50);
+  } else {
+    ui_home = *faces[0].watchface;
+  }
+
+  lv_disp_load_scr(ui_home);
 
   // watch.setConnectionCallback(connectionCallback);
   // watch.setNotificationCallback(notificationCallback);
@@ -375,94 +397,53 @@ void setup() {
   watch.setBattery(70);
 
   tft.setBrightness(200);
-
 }
 
-void loop() {
-  
+void loop()
+{
+
   lv_timer_handler(); /* let the GUI do its work */
   delay(5);
 
   watch.loop();
 
   update_faces();
-
-  
-
-  
-
 }
 
-void update_faces(){
-  int sec = watch.getSecond();
-  int min = watch.getMinute();
-  int hr = watch.getHourC();
-  bool md =  watch.is24Hour();
+void update_faces()
+{
+  int second = watch.getSecond();
+  int minute = watch.getMinute();
+  int hour = watch.getHourC();
+  bool mode = watch.is24Hour();
   bool am = watch.getHour(true) < 12;
-  int dy = watch.getDay();
-  int mt = watch.getMonth() + 1;
-  int yr = watch.getYear();
-  int wk = watch.getDayofWeek();
+  int day = watch.getDay();
+  int month = watch.getMonth() + 1;
+  int year = watch.getYear();
+  int weekday = watch.getDayofWeek();
 
   int temp = watch.getWeatherAt(0).temp;
-  int ic =  watch.getWeatherAt(0).icon;
+  int icon = watch.getWeatherAt(0).icon;
 
-  int bat = watch.getPhoneBattery();
-  int con =  watch.isConnected();
+  int battery = watch.getPhoneBattery();
+  int connection = watch.isConnected();
 
-  update_time_34_2_dial(sec, min, hr, md, am, dy, mt, yr, wk);
-  update_weather_34_2_dial(temp, ic);
-  update_status_34_2_dial(bat, con);
-  update_activity_34_2_dial(2735, 357, 345);
-  update_health_34_2_dial(76, 97);
+  int steps = 2735;
+  int distance = 17;
+  int kcal = 348;
+  int bpm = 76;
+  int oxygen = 97;
 
-
-  update_time_75_2_dial(sec, min, hr, md, am, dy, mt, yr, wk);
-  update_weather_75_2_dial(temp, ic);
-  update_status_75_2_dial(bat, con);
-  update_activity_75_2_dial(2735, 357, 345);
-  update_health_75_2_dial(76, 97);
-
-  update_time_79_2_dial(sec, min, hr, md, am, dy, mt, yr, wk);
-  update_weather_79_2_dial(temp, ic);
-  update_status_79_2_dial(bat, con);
-  update_activity_79_2_dial(2735, 357, 345);
-  update_health_79_2_dial(76, 97);
-
-  update_time_radar(sec, min, hr, md, am, dy, mt, yr, wk);
-  update_weather_radar(temp, ic);
-  update_status_radar(bat, con);
-  update_activity_radar(2735, 357, 345);
-  update_health_radar(76, 97);
-
-  update_time_116_2_dial(sec, min, hr, md, am, dy, mt, yr, wk);
-  update_weather_116_2_dial(temp, ic);
-  update_status_116_2_dial(bat, con);
-  update_activity_116_2_dial(2735, 357, 345);
-  update_health_116_2_dial(76, 97);
-
-  update_time_756_2_dial(sec, min, hr, md, am, dy, mt, yr, wk);
-  update_weather_756_2_dial(temp, ic);
-  update_status_756_2_dial(bat, con);
-  update_activity_756_2_dial(2735, 357, 345);
-  update_health_756_2_dial(76, 97);
-
-  update_time_tix_resized(sec, min, hr, md, am, dy, mt, yr, wk);
-  update_weather_tix_resized(temp, ic);
-  update_status_tix_resized(bat, con);
-  update_activity_tix_resized(2735, 357, 345);
-  update_health_tix_resized(76, 97);
-
-  update_time_pixel_resized(sec, min, hr, md, am, dy, mt, yr, wk);
-  update_weather_pixel_resized(temp, ic);
-  update_status_pixel_resized(bat, con);
-  update_activity_pixel_resized(2735, 357, 345);
-  update_health_pixel_resized(76, 97);
-
-  update_time_smart_resized(sec, min, hr, md, am, dy, mt, yr, wk);
-  update_weather_smart_resized(temp, ic);
-  update_status_smart_resized(bat, con);
-  update_activity_smart_resized(2735, 357, 345);
-  update_health_smart_resized(76, 97);
-
+  update_check_34_2_dial(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+  update_check_75_2_dial(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+  update_check_79_2_dial(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+  update_check_116_2_dial(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+  update_check_756_2_dial(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+  update_check_b_w_resized(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+  update_check_kenya(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+  update_check_pixel_resized(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+  update_check_radar(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+  update_check_smart_resized(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+  update_check_tix_resized(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
+  update_check_wfb_resized(ui_home, second, minute, hour, mode, am, day, month, year, weekday, temp, icon, battery, connection, steps, distance, kcal, bpm, oxygen);
 }

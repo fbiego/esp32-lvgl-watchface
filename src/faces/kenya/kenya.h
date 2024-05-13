@@ -14,6 +14,9 @@ extern "C"
 
 #include "lvgl.h"
 
+// #define ENABLE_FACE_KENYA // (Kenya) uncomment to enable or define it elsewhere
+
+#ifdef ENABLE_FACE_KENYA
     extern lv_obj_t *face_kenya;
 	extern lv_obj_t *face_kenya_0_264;
 	extern lv_obj_t *face_kenya_1_58372;
@@ -67,14 +70,19 @@ extern "C"
 	LV_IMG_DECLARE(face_kenya_dial_img_preview_0);
 
 
+#endif
     void onFaceEvent(lv_event_t * e);
 
-    void init_face_kenya(void);
+    void init_face_kenya(void (*callback)(const char*, const lv_img_dsc_t *, lv_obj_t **));
     void update_time_kenya(int second, int minute, int hour, bool mode, bool am, int day, int month, int year, int weekday);
     void update_weather_kenya(int temp, int icon);
     void update_status_kenya(int battery, bool connection);
     void update_activity_kenya(int steps, int distance, int kcal);
     void update_health_kenya(int bpm, int oxygen);
+    void update_all_kenya(int second, int minute, int hour, bool mode, bool am, int day, int month, int year, int weekday, 
+                int temp, int icon, int battery, bool connection, int steps, int distance, int kcal, int bpm, int oxygen);
+    void update_check_kenya(lv_obj_t *root, int second, int minute, int hour, bool mode, bool am, int day, int month, int year, int weekday, 
+                int temp, int icon, int battery, bool connection, int steps, int distance, int kcal, int bpm, int oxygen);
 
 
 #ifdef __cplusplus
