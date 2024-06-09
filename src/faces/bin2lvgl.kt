@@ -89,7 +89,14 @@ class Show(var id: Int, var value: Int) {
             0x00 -> "(hour / $x) % $max"
             0x01 -> "(minute / $x) % $max"
             0x02 -> "(day / $x) % $max"
-            0x03 -> "(month / $x) % $max"
+            0x03 -> {
+                val s = if (max == 12) {
+                    "(month - 1)"
+                } else {
+                    "month"
+                }
+                "($s / $x) % $max"
+            }
             0x06 -> "((weekday + 6) / $x) % $max"
             0x07 -> "(year / $x) % $max"
             0x08 -> "(am ? 0 : 1) % $max"
@@ -186,7 +193,7 @@ fun main(args: Array<String>) {
         if (data.size > 0) {
             val nm = args[0].replace(".bin", "").replace("-", "_")
 
-            val faceName = if (data.size > 1 ) {
+            val faceName = if (args.size > 1 ) {
                 args[1]
             } else {
                 nm.replace("_", " ")
