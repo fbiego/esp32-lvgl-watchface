@@ -191,14 +191,20 @@ fun main(args: Array<String>) {
         val data = File(args[0]).readBytes()
 
         if (data.size > 0) {
-            val nm = args[0].replace(".bin", "").replace("-", "_")
+            val nm = args[0].replace(".bin", "").replace("-", "_").replace("_dial", "")
 
             val faceName = if (args.size > 1 ) {
                 args[1]
             } else {
                 nm.replace("_", " ")
             }
-            extractComponents(data, nm, faceName)
+
+            val binary = if (args.size > 2) {
+                args[2].toBooleanStrictOrNull() ?: false
+            } else {
+                false
+            }
+            extractComponents(data, nm, faceName, binary)
 
             println("-----Done-------")
         } else {
@@ -209,13 +215,14 @@ fun main(args: Array<String>) {
     }
 }
 
-fun extractComponents(data: ByteArray, name: String, faceName: String, wd: Int = 240, ht: Int = 240) {
+fun extractComponents(data: ByteArray, name: String, faceName: String, binary: Boolean, wd: Int = 240, ht: Int = 240,) {
     val no =
             (data[3].toPInt() * 256 * 256 * 256) +
                     (data[2].toPInt() * 256 * 256) +
                     (data[1].toPInt() * 256) +
                     data[0].toPInt()
 
+    
     println("Detected $no components")
 
     if (no > 100) {
@@ -223,6 +230,8 @@ fun extractComponents(data: ByteArray, name: String, faceName: String, wd: Int =
         return
     }
 
+    var elements = ""
+    
     generateList()
 
     val canvas = BufferedImage(wd, ht, BufferedImage.TYPE_INT_ARGB)
@@ -237,17 +246,26 @@ fun extractComponents(data: ByteArray, name: String, faceName: String, wd: Int =
 
     var text = "Components List\n"
     var a = 0 // item
-    // var b = 0 //
+    var b = 0 //
 
     var wt = 0
 
     var tp = 0
+
+    var use_raw = binary
+    if (use_raw){
+        println("Watchface images will be exported as .bin files, you need to upload them manually")
+    } else {
+        println("Watchface images will be included in the code as .c files")
+    }
+    var rPrefix = "S:" // lvgl drive letter path for image bin files
 
     var extern = ""
     var objects = ""
     var declare = ""
     var faceItems = ""
     var rscArray = ""
+    var rscPathArray = ""
     var lvUpdateTime = ""
     var lvUpdateWeather = ""
     var lvUpdateStatus = ""
@@ -255,7 +273,11 @@ fun extractComponents(data: ByteArray, name: String, faceName: String, wd: Int =
     var lvUpdateHealth = ""
 
     var weatherIc = "const lv_img_dsc_t *face_${name}_dial_img_weather[] = {\n"
+    var weatherPathIc = "const char *face_${name}_dial_img_weather[] = {\n"
     var connIC = "const lv_img_dsc_t *face_${name}_dial_img_connection[] = {\n"
+    var connPathIC = "const char *face_${name}_dial_img_connection[] = {\n"
+    var weatherJson = "["
+    var connJson = "["
 
     // loop through the components
     for (x in 0 until no) {
@@ -344,6 +366,9 @@ fun extractComponents(data: ByteArray, name: String, faceName: String, wd: Int =
 
             var rs = rsc.singleOrNull { it.id == clt }
 
+            var rscJson = ""
+
+
             var z =
                     if (rs != null) {
                         rs.pos
@@ -363,28 +388,44 @@ fun extractComponents(data: ByteArray, name: String, faceName: String, wd: Int =
                 rsc.add(Resource(clt, x))
 
                 var rscArr = "const lv_img_dsc_t *face_${name}_dial_img_${x}_${clt}_group[] = {\n"
+                var rscPathArr = "const char *face_${name}_dial_img_${x}_${clt}_group[] = {\n"
+
+                rscJson = "["
 
                 // save assets & declare
                 for (aa in 0 until cmp) {
                     declare += "\tLV_IMG_DECLARE(face_${name}_dial_img_${x}_${clt}_${aa});\n"
                     rscArr += "\t&face_${name}_dial_img_${x}_${clt}_${aa},\n"
+
+                    rscPathArr += "\t\"${rPrefix}${name}_${x}_${clt}_${aa}.bin\",\n"
+                    rscJson +=  "\"${rPrefix}${name}_${x}_${clt}_${aa}.bin\", "
                 }
                 rscArr += "};\n"
+                rscPathArr += "};\n"
+                rscJson = rscJson.dropLast(2)
+                rscJson += "]"
 
                 if (id == 0x17) {
                     weatherIc += "\t&face_${name}_dial_img_${x}_${clt}_0,\n"
+                    weatherPathIc += "\t\"${rPrefix}${name}_${x}_${clt}_0.bin\",\n"
+                    weatherJson += "\"${rPrefix}${name}_${x}_${clt}_0.bin\","
                 } else if (id == 0x0A) {
                     connIC += "\t&face_${name}_dial_img_${x}_${clt}_0,\n"
+                    connPathIC += "\t\"${rPrefix}${name}_${x}_${clt}_0.bin\",\n"
+                    connJson += "\"${rPrefix}${name}_${x}_${clt}_0.bin\","
 
                     if (connIC.count { it == '\n' } > 2) {
 
                         rscArray += connIC + "};\n"
+                        rscPathArray += connPathIC + "};\n"
+                        rscJson = connJson.dropLast(1) + "]"
                     }
                 } else if (cmp == 1) {
                     // do not add non grouped items
                 } else {
                     // do not add weather to group
                     rscArray += rscArr
+                    rscPathArray += rscPathArr
                 }
 
                 saveAsset(
@@ -394,7 +435,8 @@ fun extractComponents(data: ByteArray, name: String, faceName: String, wd: Int =
                         !(x == 0 && (id == 0x09 || id == 0x19)),
                         cmp,
                         name,
-                        "${x}_${clt}"
+                        "${x}_${clt}",
+                        use_raw
                 )
 
                 if (id == 0x1E) {} else {
@@ -402,6 +444,8 @@ fun extractComponents(data: ByteArray, name: String, faceName: String, wd: Int =
                     // saveImage(output, xSz, ySz, x, name, clt)
                 }
             } else if (id == 0x16 && id2 == 0x00) {
+                
+
                 saveAsset(
                         output,
                         xSz,
@@ -409,8 +453,26 @@ fun extractComponents(data: ByteArray, name: String, faceName: String, wd: Int =
                         !(x == 0 && (id == 0x09 || id == 0x19)),
                         cmp,
                         name,
-                        "${x}_${clt}"
+                        "${x}_${clt}",
+                        use_raw
                 )
+                rscJson = "["
+                for (aa in 0 until cmp) {
+                    rscJson +=  "\"${rPrefix}${name}_${z}_${clt}_${aa}.bin\", "
+                }
+                rscJson = rscJson.dropLast(2)
+                rscJson += "]"
+            } else {
+                rscJson = "["
+                for (aa in 0 until cmp) {
+                    rscJson +=  "\"${rPrefix}${name}_${z}_${clt}_${aa}.bin\", "
+                }
+                rscJson = rscJson.dropLast(2)
+                rscJson += "]"
+            }
+
+            if (cmp <= 1){
+                rscJson = "null"
             }
 
             if (id == 0x0A) {
@@ -436,6 +498,9 @@ fun extractComponents(data: ByteArray, name: String, faceName: String, wd: Int =
                 wt++
                 if (wt == 9) {
                     rscArray += weatherIc + "};\n"
+                    rscPathArray += weatherPathIc + "};\n"
+
+                    rscJson = weatherJson.dropLast(1) + "]"
                 }
                 if (wt != 1) {
                     continue
@@ -451,12 +516,21 @@ fun extractComponents(data: ByteArray, name: String, faceName: String, wd: Int =
                 extern += "\textern lv_obj_t *face_${name}_${x}_${clt};\n"
                 objects += "lv_obj_t *face_${name}_${x}_${clt};\n"
 
+                elements += jsonElem.replace("{{id}}", "$id")
+                                    .replace("{{sub}}", "$id")
+                                    .replace("{{x}}", "$xOff")
+                                    .replace("{{y}}", "$yOff")
+                                    .replace("{{pvX}}", "$aOff")
+                                    .replace("{{pvY}}", "${ySz - aOff}")
+                                    .replace("{{image}}", "${rPrefix}${name}_${z}_${clt}_0.bin")
+                                    .replace("{{group}}", "$rscJson")
+
                 faceItems +=
                         lvItem.replace("{{PARENT}}", "face_${name}")
                                 .replace("{{CHILD}}", "face_${name}_${x}_${clt}")
                                 .replace("{{CHILD_X}}", "$xOff")
                                 .replace("{{CHILD_Y}}", "$yOff")
-                                .replace("{{RESOURCE}}", "face_${name}_dial_img_${z}_${clt}_0")
+                                .replace("{{RESOURCE}}", if (use_raw) {"\"${rPrefix}${name}_${z}_${clt}_0.bin\""} else {"&face_${name}_dial_img_${z}_${clt}_0"})
 
                 if (id == 0x0d) {
                     faceItems +=
@@ -554,6 +628,7 @@ fun extractComponents(data: ByteArray, name: String, faceName: String, wd: Int =
 
     graphics.dispose()
 
+
     // Create a file to save the image to
     val dir = File(name)
 
@@ -564,6 +639,15 @@ fun extractComponents(data: ByteArray, name: String, faceName: String, wd: Int =
 
     val list = File(dir, "items.txt")
     list.writeText(text)
+
+    if (use_raw){
+        val jsonFile = File(dir, "${name.lowercase()}.json")
+        elements = elements.dropLast(1)
+        jsonObj = jsonObj.replace("{{name}}", name.lowercase()).replace("{{elements}}", elements)
+        jsonFile.writeText(jsonObj)
+    }
+    
+
     val outputFile = File(dir, "watchface.png")
 
     // Save the BufferedImage to the output file
@@ -588,9 +672,15 @@ fun extractComponents(data: ByteArray, name: String, faceName: String, wd: Int =
     g2d.drawImage(mask, 0, 0, null)
     g2d.dispose()
 
-    saveAsset(bufferBytes(scaledCanvas), 160, 160, false, 1, name, "preview")
+    saveAsset(bufferBytes(scaledCanvas), 160, 160, false, 1, name, "preview", false)
 
     declare += "\tLV_IMG_DECLARE(face_${name}_dial_img_preview_0);\n"
+
+    if (use_raw) {
+        declare = "LV_IMG_DECLARE(face_${name}_dial_img_preview_0);\n"
+    } else { 
+        declare += "\tLV_IMG_DECLARE(face_${name}_dial_img_preview_0);\n"
+    }
 
     h_file =
             h_file.replace("{{NAME}}", name.uppercase())
@@ -603,7 +693,8 @@ fun extractComponents(data: ByteArray, name: String, faceName: String, wd: Int =
                     .replace("{{name}}", name.lowercase())
                     .replace("{{OBJECTS}}", objects)
                     .replace("{{ITEMS}}", faceItems)
-                    .replace("{{RSC_ARR}}", rscArray)
+                    .replace("{{RSC_ARR}}", if (use_raw) { "" } else { rscArray })
+                    .replace("{{RSC_PATH_ARR}}", if (use_raw) { rscPathArray } else { ""})
                     .replace("{{TIME}}", lvUpdateTime)
                     .replace("{{STATUS}}", lvUpdateStatus)
                     .replace("{{WEATHER}}", lvUpdateWeather)
@@ -703,6 +794,25 @@ fun bufferBytes(canvas: BufferedImage): ByteArray {
     return byteArray
 }
 
+fun lvHeaderBytes(cf: Int, w: Int, h: Int): ByteArray {
+    require(cf in 0..31) { "cf must be between 0 and 31" }
+    require(w in 0..2047) { "w must be between 0 and 2047" }
+    require(h in 0..2047) { "h must be between 0 and 2047" }
+
+    val alwaysZero = 0
+    val reserved = 0
+
+    // Pack the values into a single 32-bit integer
+    val header = (cf and 0x1F) or
+                 ((alwaysZero and 0x07) shl 5) or
+                 ((reserved and 0x03) shl 8) or
+                 ((w and 0x07FF) shl 10) or
+                 ((h and 0x07FF) shl 21)
+
+    // Convert the 32-bit integer to bytes in little-endian format
+    return ByteArray(4) { i -> (header shr (i * 8) and 0xFF).toByte() }
+}
+
 fun saveAsset(
         rgb565: ByteArray,
         width: Int,
@@ -710,13 +820,25 @@ fun saveAsset(
         tr: Boolean = true,
         amount: Int,
         name: String,
-        asset: String
+        asset: String,
+        binary: Boolean = false
 ) {
+
+    val dir = File(name)
+
+    if (!dir.exists()) {
+        dir.mkdirs()
+        println("Created output folder")
+    }
+
 
     var text =
             asset_header.replace("{{NAME}}", name.uppercase()).replace("{{name}}", name.lowercase())
+    
 
     for (a in 0 until amount) {
+        var data_raw = byteArrayOfInts()
+
         var dat =
                 """
 const LV_ATTRIBUTE_MEM_ALIGN uint8_t face_${name}_dial_img_${asset}_data_${a}[] = {
@@ -745,8 +867,11 @@ const LV_ATTRIBUTE_MEM_ALIGN uint8_t face_${name}_dial_img_${asset}_data_${a}[] 
                                 rgb565[j * 2 + 1].toInt() and 0xFF,
                                 rgb565[j * 2].toInt() and 0xFF
                         )
+                data_raw += (rgb565[j * 2 + 1]).toByte()
+                data_raw += (rgb565[j * 2]).toByte()
                 if (tr) {
                     hex += String.format("0x%02X,", alpha and 0xFF)
+                    data_raw += (alpha).toByte()
                 }
                 if (z % 32 == 0 && z != 0) {
                     hex += "\n\t"
@@ -760,11 +885,11 @@ const LV_ATTRIBUTE_MEM_ALIGN uint8_t face_${name}_dial_img_${asset}_data_${a}[] 
 
         text += dat + "\n"
 
-        val color =
+        val (color, cf) =
                 if (tr) {
-                    "LV_IMG_CF_TRUE_COLOR_ALPHA"
+                    Pair("LV_IMG_CF_TRUE_COLOR_ALPHA", 5)
                 } else {
-                    "LV_IMG_CF_TRUE_COLOR"
+                    Pair("LV_IMG_CF_TRUE_COLOR", 4)
                 }
 
         val obj =
@@ -780,28 +905,59 @@ const lv_img_dsc_t face_${name}_dial_img_${asset}_${a} = {
     """
 
         text += obj
+
+        if (binary){
+            val hdr = lvHeaderBytes(cf, width, height)
+
+            val dirB = File(dir, "binary")
+            if (!dirB.exists()) {
+                dirB.mkdirs()
+                println("Created binary folder")
+            }
+
+            val rf = File(dirB, "${name}_${asset}_${a}.bin")
+            rf.writeBytes(hdr + data_raw)
+        }
     }
 
-    val dir = File(name)
+    if (!binary){
+        val dirA = File(dir, "assets")
+        if (!dirA.exists()) {
+            dirA.mkdirs()
+            println("Created assets folder")
+        }
 
-    if (!dir.exists()) {
-        dir.mkdirs()
-        println("Created output folder")
+        val fl = File(dirA, "face_${name}_dial_img_${asset}.c")
+        fl.writeText(text)
     }
-    val dirA = File(dir, "assets")
-    if (!dirA.exists()) {
-        dirA.mkdirs()
-        println("Created assets folder")
-    }
-
-    val fl = File(dirA, "face_${name}_dial_img_${asset}.c")
-    fl.writeText(text)
 }
+
+var jsonElem =
+"""
+		{
+			"id": {{id}},
+			"x": {{x}},
+			"y": {{y}},
+            "pvX": {{pvX}},
+			"pvY": {{pvY}},
+			"image": "{{image}}",
+			"group": {{group}}
+		},"""
+
+var jsonObj = 
+"""
+{
+	"name": "{{name}}",
+	"elements": [
+		{{elements}}
+	]
+}
+"""
 
 var lvItem =
         """
     {{CHILD}} = lv_img_create({{PARENT}});
-    lv_img_set_src({{CHILD}}, &{{RESOURCE}});
+    lv_img_set_src({{CHILD}}, {{RESOURCE}});
     lv_obj_set_width({{CHILD}}, LV_SIZE_CONTENT);
     lv_obj_set_height({{CHILD}}, LV_SIZE_CONTENT);
     lv_obj_set_x({{CHILD}}, {{CHILD_X}});
@@ -880,6 +1036,8 @@ lv_obj_t *face_{{name}};
 
 
 {{RSC_ARR}}
+
+{{RSC_PATH_ARR}}
 
 #endif
 

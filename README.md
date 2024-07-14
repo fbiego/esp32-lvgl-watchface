@@ -32,6 +32,11 @@ The Kotlin script [`bin2lvgl.kt`](src/faces/bin2lvgl.kt) has been compiled into 
 You can also recompile it with `kotlinc bin2lvgl.kt -include-runtime -d bin2lvgl.jar`.
 
 To convert the watchface, simply run `java -jar bin2lvgl.jar watchface.bin Name`, and LVGL code will be generated into a folder.
+
+By default, the images will be exported as .c code files. To export as .bin files for use with LVGL fs add `true`  after the name.
+`java -jar bin2lvgl.jar watchface.bin Name true`
+This bin files will need to be uploaded separately.
+
 On Windows, just drag and drop the bin file to [`convert.bat`](src/faces/convert.bat)
 
 In the `main.cpp`, include the `watchface.h` file.
