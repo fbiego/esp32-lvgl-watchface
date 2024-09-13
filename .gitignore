@@ -4,5 +4,3 @@
 .vscode/launch.json
 .vscode/ipch
 *.log
-*src/faces/
-*.bin
