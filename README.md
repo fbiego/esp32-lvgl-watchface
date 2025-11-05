@@ -4,7 +4,7 @@ This project renders pre-built binary watchfaces on ESP32 using LVGL. A Kotlin s
 
 ## ZSWatch
 
-Create wathfaces for [`ZSWatch`](https://github.com/jakkra/ZSWatch)
+Create watchfaces for [`ZSWatch`](https://github.com/jakkra/ZSWatch)
 
 - https://github.com/Kampi/esp32-lvgl-watchface
 
